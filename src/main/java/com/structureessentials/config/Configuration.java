@@ -1,6 +1,6 @@
-package com.armordamagescale.config;
+package com.structureessentials.config;
 
-import com.armordamagescale.ArmorDamage;
+import com.structureessentials.StructureEssentials;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -34,11 +34,11 @@ public class Configuration
 
     public void load()
     {
-        final Path configPath = FMLPaths.CONFIGDIR.get().resolve(ArmorDamage.MODID + ".json");
+        final Path configPath = FMLPaths.CONFIGDIR.get().resolve(StructureEssentials.MODID + ".json");
         final File config = configPath.toFile();
         if (!config.exists())
         {
-            ArmorDamage.LOGGER.warn("Config for armordamagescale not found, recreating default");
+            StructureEssentials.LOGGER.warn("Config not found, recreating default");
             save();
         } else
         {
@@ -48,7 +48,7 @@ public class Configuration
             }
             catch (Exception e)
             {
-                ArmorDamage.LOGGER.error("Could not read config from:" + configPath, e);
+                StructureEssentials.LOGGER.error("Could not read config from:" + configPath, e);
                 save();
             }
         }
@@ -56,7 +56,7 @@ public class Configuration
 
     public void save()
     {
-        final Path configPath = FMLPaths.CONFIGDIR.get().resolve(ArmorDamage.MODID + ".json");
+        final Path configPath = FMLPaths.CONFIGDIR.get().resolve(StructureEssentials.MODID + ".json");
         try
         {
             final BufferedWriter writer = Files.newBufferedWriter(configPath);
@@ -65,7 +65,7 @@ public class Configuration
         }
         catch (IOException e)
         {
-            ArmorDamage.LOGGER.error("Could not write config to:" + configPath, e);
+            StructureEssentials.LOGGER.error("Could not write config to:" + configPath, e);
         }
         load();
     }
