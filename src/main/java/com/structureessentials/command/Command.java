@@ -3,11 +3,12 @@ package com.structureessentials.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.ResourceOrTagLocationArgument;
+import net.minecraft.commands.arguments.ResourceOrTagArgument;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
@@ -20,23 +21,18 @@ import static com.structureessentials.StructureEssentials.MODID;
 
 public class Command
 {
-    private static final DynamicCommandExceptionType ERROR_BIOME_INVALID = new DynamicCommandExceptionType((p_214512_) ->
-    {
-        return Component.translatable("commands.locate.biome.invalid", p_214512_);
-    });
-
-    public LiteralArgumentBuilder<CommandSourceStack> build()
+    public LiteralArgumentBuilder<CommandSourceStack> build(CommandBuildContext buildContext)
     {
         return Commands.literal(MODID)
                 .then(
                         Commands.literal("getBiomeTags")
-                                .then(Commands.argument("biome", ResourceOrTagLocationArgument.resourceOrTag(Registry.BIOME_REGISTRY))
+                                .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
                                         .executes(context ->
                                         {
                                             final ResourceKey<Biome>
-                                                    biome = ResourceOrTagLocationArgument.getRegistryType(context, "biome", Registry.BIOME_REGISTRY, ERROR_BIOME_INVALID).unwrap().left().get();
+                                                    biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
                                             List<TagKey<Biome>> biomeTags =
-                                                    context.getSource().registryAccess().registry(Registry.BIOME_REGISTRY).get().getHolder(biome).get().tags().collect(Collectors.toList());
+                                                    context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
 
                                             context.getSource().sendSuccess(Component.literal("Biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD), false);
                                             for (final TagKey<Biome> biomeTag : biomeTags)
@@ -48,13 +44,13 @@ public class Command
                                         })))
                 .then(
                         Commands.literal("getBiomesForTag")
-                                .then(Commands.argument("biome", ResourceOrTagLocationArgument.resourceOrTag(Registry.BIOME_REGISTRY))
+                                .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
                                         .executes(context ->
                                         {
-                                            final TagKey<Biome> biomeTag = ResourceOrTagLocationArgument.getRegistryType(context, "biome", Registry.BIOME_REGISTRY, ERROR_BIOME_INVALID).unwrap().right().get();
+                                            final TagKey<Biome> biomeTag = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().right().get().key();
 
                                             context.getSource().sendSuccess(Component.literal("Biomes for tag: " + biomeTag.location()).withStyle(ChatFormatting.GOLD), false);
-                                            for (final Holder<Biome> biomeHolder : context.getSource().registryAccess().registry(Registry.BIOME_REGISTRY).get().asHolderIdMap())
+                                            for (final Holder<Biome> biomeHolder : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
                                             {
                                                 if (biomeHolder.is(biomeTag))
                                                 {
@@ -66,17 +62,17 @@ public class Command
                                         })))
                 .then(
                         Commands.literal("getSimilarForBiome")
-                                .then(Commands.argument("biome", ResourceOrTagLocationArgument.resourceOrTag(Registry.BIOME_REGISTRY))
+                                .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
                                         .executes(context ->
                                         {
                                             final ResourceKey<Biome>
-                                                    biome = ResourceOrTagLocationArgument.getRegistryType(context, "biome", Registry.BIOME_REGISTRY, ERROR_BIOME_INVALID).unwrap().left().get();
+                                                    biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
                                             final List<TagKey<Biome>> biomeTags =
-                                                    context.getSource().registryAccess().registry(Registry.BIOME_REGISTRY).get().getHolder(biome).get().tags().collect(Collectors.toList());
+                                                    context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
 
                                             final List<Holder<Biome>> similarBiomes = new ArrayList<>();
 
-                                            for (final Holder<Biome> currentBiome : context.getSource().registryAccess().registry(Registry.BIOME_REGISTRY).get().asHolderIdMap())
+                                            for (final Holder<Biome> currentBiome : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
                                             {
                                                 for (final TagKey<Biome> tag : biomeTags)
                                                 {

@@ -31,7 +31,7 @@ public class StructureEssentials
     @SubscribeEvent
     public void commandRegister(RegisterCommandsEvent event)
     {
-        event.getDispatcher().register(new Command().build());
+        event.getDispatcher().register(new Command().build(event.getBuildContext()));
     }
 
     private void setup(final FMLCommonSetupEvent event)
