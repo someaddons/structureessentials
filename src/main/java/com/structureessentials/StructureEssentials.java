@@ -1,6 +1,9 @@
 package com.structureessentials;
 
+import com.structureessentials.command.Command;
 import com.structureessentials.config.Configuration;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -21,11 +24,19 @@ public class StructureEssentials
     public StructureEssentials()
     {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener(this::commandRegister);
     }
 
 
+    @SubscribeEvent
+    public void commandRegister(RegisterCommandsEvent event)
+    {
+        event.getDispatcher().register(new Command().build());
+    }
+
     private void setup(final FMLCommonSetupEvent event)
     {
+
         config.load();
         LOGGER.info(MODID + " mod initialized");
     }
