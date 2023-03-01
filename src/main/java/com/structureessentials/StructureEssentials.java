@@ -25,9 +25,9 @@ public class StructureEssentials implements ModInitializer
     public void onInitialize()
     {
         config.load();
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated, commandSelection) ->
+        CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, commandSelection) ->
         {
-            dispatcher.register(new Command().build());
+            dispatcher.register(new Command().build(buildContext));
         });
 
         LOGGER.info(MODID + " mod initialized");
