@@ -1,10 +1,10 @@
 package com.structureessentials.config;
 
-import com.structureessentials.StructureEssentials;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import net.minecraftforge.fml.loading.FMLPaths;
+import com.structureessentials.StructureEssentials;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,7 +34,7 @@ public class Configuration
 
     public void load()
     {
-        final Path configPath = FMLPaths.CONFIGDIR.get().resolve(StructureEssentials.MODID + ".json");
+        final Path configPath = FabricLoader.getInstance().getConfigDir().normalize().resolve(StructureEssentials.MODID + ".json");
         final File config = configPath.toFile();
         if (!config.exists())
         {
@@ -56,7 +56,7 @@ public class Configuration
 
     public void save()
     {
-        final Path configPath = FMLPaths.CONFIGDIR.get().resolve(StructureEssentials.MODID + ".json");
+        final Path configPath = FabricLoader.getInstance().getConfigDir().normalize().resolve(StructureEssentials.MODID + ".json");
         try
         {
             final BufferedWriter writer = Files.newBufferedWriter(configPath);

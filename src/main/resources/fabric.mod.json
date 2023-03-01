@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "structureessentials",
+  "version": "${version}",
+  "accessWidener": "structureessentials.accesswidener",
+
+  "name": "Structure Essentials Mod",
+  "description": "Essential utilities for structures",
+  "authors": [
+    "Someaddons"
+  ],
+  "contact": {
+    "homepage": "",
+    "sources": ""
+  },
+
+  "license": "ARR",
+  "icon": "assets/modid/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.structureessentials.StructureEssentials"
+    ]
+  },
+  "mixins": [
+    "structureessentials.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.19.x",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
