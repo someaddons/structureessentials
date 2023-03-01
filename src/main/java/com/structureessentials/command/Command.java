@@ -2,16 +2,23 @@ package com.structureessentials.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceOrTagLocationArgument;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.structure.Structure;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -64,6 +71,54 @@ public class Command
 
                                             return 1;
                                         })))
+                .then(
+                        Commands.literal("getStructuresNearby")
+                                .requires(stack -> stack.hasPermission(2))
+                                .executes(context ->
+                                {
+                                    final ServerLevel world = context.getSource().getLevel();
+                                    final Map<Structure, LongSet> structures = new HashMap<>();
+
+                                    final ChunkPos start = new ChunkPos(new BlockPos(context.getSource().getPosition()));
+                                    for (int x = 0; x < 5; x++)
+                                    {
+                                        for (int z = 0; z < 5; z++)
+                                        {
+                                            for (final Map.Entry<Structure, LongSet> entry : world.structureManager().getAllStructuresAt(new BlockPos((start.x + x) << 4, 0, (start.z + z) << 4)).entrySet())
+                                            {
+                                                structures.computeIfAbsent(entry.getKey(), k -> new LongOpenHashSet(entry.getValue())).addAll(entry.getValue());
+                                            }
+                                        }
+                                    }
+
+                                    context.getSource().sendSuccess(Component.literal("Structures nearby: ").withStyle(ChatFormatting.GOLD), false);
+                                    Map<BlockPos, String> structurePositions = new HashMap<>();
+                                    for (Map.Entry<Structure, LongSet> structureEntry : structures.entrySet())
+                                    {
+                                        world.structureManager().fillStartsForStructure(structureEntry.getKey(), structureEntry.getValue(),
+                                                structureStart ->
+                                                {
+                                                    structurePositions.put(structureStart.getBoundingBox().getCenter(), context.getSource().registryAccess().registry(Registry.STRUCTURE_REGISTRY).get()
+                                                            .getKey(structureEntry.getKey()).toString());
+                                                }
+                                        );
+                                    }
+
+                                    final List<Map.Entry<BlockPos, String>> sortedStructures = new ArrayList<>(structurePositions.entrySet());
+                                    sortedStructures.sort(Comparator.comparingDouble(p -> p.getKey().distSqr(new BlockPos(context.getSource().getPosition()))));
+
+                                    for (final Map.Entry<BlockPos, String> structureEntry : sortedStructures)
+                                    {
+                                        context.getSource().sendSuccess(Component.literal(structureEntry.getValue()).append(Component.literal(" " + structureEntry.getKey()).withStyle(ChatFormatting.YELLOW).withStyle(style ->
+                                                {
+                                                    return style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                                                            "/tp " + structureEntry.getKey().getX() + " " + structureEntry.getKey().getY() + " " + structureEntry.getKey().getZ()));
+                                                }
+                                        )), false);
+                                    }
+
+                                    return 1;
+                                }))
                 .then(
                         Commands.literal("getSimilarForBiome")
                                 .then(Commands.argument("biome", ResourceOrTagLocationArgument.resourceOrTag(Registry.BIOME_REGISTRY))
