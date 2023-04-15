@@ -6,7 +6,8 @@
     "PlacedFeatureErrorMixin",
     "StructurePlacementLogging",
     "StructureSearchSpeedupMixin",
-    "StructureSearchTimeoutMixin"
+    "StructureSearchTimeoutMixin",
+    "BlockInfoMixin"
   ],
   "client": [
   ],
