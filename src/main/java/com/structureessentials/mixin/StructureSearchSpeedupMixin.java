@@ -27,25 +27,34 @@ public class StructureSearchSpeedupMixin
 {
     @Inject(method = "getStructureGeneratingAt", at = @At("HEAD"), cancellable = true)
     private static void onFind(
-            final Set<Holder<Structure>> holderSet,
-            final LevelReader level,
-            final StructureManager structureManager,
-            final boolean load,
-            final StructurePlacement placement,
-            final ChunkPos pos, final CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
+      final Set<Holder<Structure>> holderSet,
+      final LevelReader level,
+      final StructureManager structureManager,
+      final boolean load,
+      final StructurePlacement placement,
+      final ChunkPos pos, final CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
     {
         if (holderSet.isEmpty() || !StructureEssentials.config.getCommonConfig().useFastStructureLookup)
         {
             return;
         }
 
-        final Holder<Biome> biomeHolder = level.getBiome(pos.getWorldPosition());
         boolean found = false;
-        for (final Holder<Structure> structureHolder : holderSet)
+        for (int i = -128; i < 284; i+=16)
         {
-            if (structureHolder.value().biomes().contains(biomeHolder))
+            final Holder<Biome> biomeHolder = level.getBiome(pos.getWorldPosition().offset(0,i,0));
+
+            for (final Holder<Structure> structureHolder : holderSet)
             {
-                found = true;
+                if (structureHolder.value().biomes().contains(biomeHolder))
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found)
+            {
                 break;
             }
         }
