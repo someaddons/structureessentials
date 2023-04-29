@@ -12,13 +12,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import java.util.List;
 
 @Mixin(value = MappedRegistry.class, priority = 10000)
-public abstract class MappedRegistryMixin extends Registry
+public abstract class MappedRegistryMixin implements Registry
 {
-    protected MappedRegistryMixin(final ResourceKey p_122920_, final Lifecycle p_122921_)
-    {
-        super(p_122920_, p_122921_);
-    }
-
     @Redirect(method = "freeze", at = @At(value = "INVOKE", target = "Ljava/util/List;isEmpty()Z"), require = 0)
     private boolean onfreeze(final List instance)
     {
