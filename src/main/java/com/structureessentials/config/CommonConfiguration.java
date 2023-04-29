@@ -8,6 +8,7 @@ public class CommonConfiguration
     public boolean structurePlacementLogging = false;
     public int structureSearchTimeout = 50;
     public boolean useFastStructureLookup = true;
+    public boolean warnMissingRegistryEntry = true;
 
     public CommonConfiguration()
     {
@@ -32,6 +33,11 @@ public class CommonConfiguration
         entry3.addProperty("desc:", "Whether the fast structure search is used, default: true");
         entry3.addProperty("useFastStructureLookup", useFastStructureLookup);
         root.add("useFastStructureLookup", entry3);
+
+        final JsonObject entry4 = new JsonObject();
+        entry4.addProperty("desc:", "Prevents crashes for missing registry entries(e.g. a mod update structure ids) and turns them into a log error message instead, default: true");
+        entry4.addProperty("warnMissingRegistryEntry", warnMissingRegistryEntry);
+        root.add("warnMissingRegistryEntry", entry4);
 
         return root;
     }
