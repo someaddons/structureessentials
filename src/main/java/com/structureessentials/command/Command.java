@@ -75,7 +75,7 @@ public class Command
                   final ServerLevel world = context.getSource().getLevel();
                   final Map<Structure, LongSet> structures = new HashMap<>();
 
-                  final ChunkPos start = new ChunkPos(new BlockPos(context.getSource().getPosition()));
+                  final ChunkPos start = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
                   for (int x = 0; x < 5; x++)
                   {
                       for (int z = 0; z < 5; z++)
@@ -103,7 +103,7 @@ public class Command
                   }
 
                   final List<Map.Entry<BlockPos, String>> sortedStructures = new ArrayList<>(structurePositions.entrySet());
-                  sortedStructures.sort(Comparator.comparingDouble(p -> p.getKey().distSqr(new BlockPos(context.getSource().getPosition()))));
+                  sortedStructures.sort(Comparator.comparingDouble(p -> p.getKey().distSqr(BlockPos.containing(context.getSource().getPosition()))));
 
                   for (final Map.Entry<BlockPos, String> structureEntry : sortedStructures)
                   {
