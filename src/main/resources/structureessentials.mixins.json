@@ -9,7 +9,8 @@
     "StructureSearchSpeedupMixin",
     "StructureSearchTimeoutMixin",
     "BlockInfoMixin",
-    "MappedRegistryMixin"
+    "MappedRegistryMixin",
+    "JigsawPlacementMixin"
   ],
   "client": [
   ],
