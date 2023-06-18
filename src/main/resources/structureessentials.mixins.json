@@ -3,6 +3,7 @@
   "package": "com.structureessentials.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "structureessentials.refmap.json",
+  "plugin": "com.structureessentials.mixin.MixinConfig",
   "mixins": [
     "PlacedFeatureErrorMixin",
     "StructurePlacementLogging",
@@ -10,7 +11,8 @@
     "StructureSearchTimeoutMixin",
     "BlockInfoMixin",
     "MappedRegistryMixin",
-    "JigsawPlacementMixin"
+    "JigsawPlacementMixin",
+    "LegacyRandomSourceMixin"
   ],
   "client": [
   ],
