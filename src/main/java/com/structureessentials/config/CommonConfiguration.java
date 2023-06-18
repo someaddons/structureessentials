@@ -9,6 +9,7 @@ public class CommonConfiguration
     public int structureSearchTimeout = 50;
     public boolean useFastStructureLookup = true;
     public boolean warnMissingRegistryEntry = true;
+    public boolean disableLegacyRandomCrashes = true;
 
     public CommonConfiguration()
     {
@@ -38,6 +39,11 @@ public class CommonConfiguration
         entry4.addProperty("desc:", "Prevents crashes for missing registry entries(e.g. a mod update structure ids) and turns them into a log error message instead, default: true");
         entry4.addProperty("warnMissingRegistryEntry", warnMissingRegistryEntry);
         root.add("warnMissingRegistryEntry", entry4);
+
+        final JsonObject entry5 = new JsonObject();
+        entry5.addProperty("desc:", "Prevents crashes for multithreaded access of thread specific randoms, default: true");
+        entry5.addProperty("disableLegacyRandomCrashes", disableLegacyRandomCrashes);
+        root.add("disableLegacyRandomCrashes", entry5);
 
         return root;
     }
