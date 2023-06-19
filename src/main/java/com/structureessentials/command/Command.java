@@ -40,10 +40,10 @@ public class Command
                                             List<TagKey<Biome>> biomeTags =
                                                     context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
 
-                                            context.getSource().sendSuccess(Component.literal("Biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD), false);
+                                            context.getSource().sendSystemMessage(Component.literal("Biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
                                             for (final TagKey<Biome> biomeTag : biomeTags)
                                             {
-                                                context.getSource().sendSuccess(Component.literal("#" + biomeTag.location()), false);
+                                                context.getSource().sendSystemMessage(Component.literal("#" + biomeTag.location()));
                                             }
 
                                             return 1;
@@ -55,12 +55,12 @@ public class Command
                                         {
                                             final TagKey<Biome> biomeTag = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().right().get().key();
 
-                                            context.getSource().sendSuccess(Component.literal("Biomes for tag: " + biomeTag.location()).withStyle(ChatFormatting.GOLD), false);
+                                            context.getSource().sendSystemMessage(Component.literal("Biomes for tag: " + biomeTag.location()).withStyle(ChatFormatting.GOLD));
                                             for (final Holder<Biome> biomeHolder : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
                                             {
                                                 if (biomeHolder.is(biomeTag))
                                                 {
-                                                    context.getSource().sendSuccess(Component.literal("Biome: " + biomeHolder.unwrapKey().get().location()), false);
+                                                    context.getSource().sendSystemMessage(Component.literal("Biome: " + biomeHolder.unwrapKey().get().location()));
                                                 }
                                             }
 
@@ -86,7 +86,7 @@ public class Command
                                         }
                                     }
 
-                                    context.getSource().sendSuccess(Component.literal("Structures nearby: ").withStyle(ChatFormatting.GOLD), false);
+                                    context.getSource().sendSystemMessage(Component.literal("Structures nearby: ").withStyle(ChatFormatting.GOLD));
                                     Map<BlockPos, String> structurePositions = new HashMap<>();
                                     for (Map.Entry<Structure, LongSet> structureEntry : structures.entrySet())
                                     {
@@ -104,12 +104,12 @@ public class Command
 
                                     for (final Map.Entry<BlockPos, String> structureEntry : sortedStructures)
                                     {
-                                        context.getSource().sendSuccess(Component.literal(structureEntry.getValue()).append(Component.literal(" " + structureEntry.getKey()).withStyle(ChatFormatting.YELLOW).withStyle(style ->
+                                        context.getSource().sendSystemMessage(Component.literal(structureEntry.getValue()).append(Component.literal(" " + structureEntry.getKey()).withStyle(ChatFormatting.YELLOW).withStyle(style ->
                                                 {
                                                     return style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
                                                             "/tp " + structureEntry.getKey().getX() + " " + structureEntry.getKey().getY() + " " + structureEntry.getKey().getZ()));
                                                 }
-                                        )), false);
+                                        )));
                                     }
 
                                     return 1;
@@ -178,22 +178,22 @@ public class Command
                                                 }
                                             }
 
-                                            context.getSource().sendSuccess(Component.literal("Similar biomes for: " + biome.location()).withStyle(ChatFormatting.GOLD), false);
+                                            context.getSource().sendSystemMessage(Component.literal("Similar biomes for: " + biome.location()).withStyle(ChatFormatting.GOLD));
 
                                             for (int i = 0; i < sortedBiomeHolders.size() && i < 10; i++)
                                             {
 
-                                                context.getSource().sendSuccess(Component.literal("Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location()), false);
+                                                context.getSource().sendSystemMessage(Component.literal("Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location()));
                                             }
 
                                             final List<Map.Entry<TagKey<Biome>, Double>> sortedBiomeTagKeys = new ArrayList<>(tagCountMap.entrySet());
                                             sortedBiomeTagKeys.sort(Comparator.comparingDouble(e -> ((Map.Entry<TagKey<Biome>, Double>) e).getValue()).reversed());
 
-                                            context.getSource().sendSuccess(Component.literal("Similar biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD), false);
+                                            context.getSource().sendSystemMessage(Component.literal("Similar biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
 
                                             for (final Map.Entry<TagKey<Biome>, Double> tag : sortedBiomeTagKeys)
                                             {
-                                                context.getSource().sendSuccess(Component.literal("Weight:" + Math.round(tag.getValue()) + " Tag: #" + tag.getKey().location()), false);
+                                                context.getSource().sendSystemMessage(Component.literal("Weight:" + Math.round(tag.getValue()) + " Tag: #" + tag.getKey().location()));
                                             }
 
                                             return 1;
