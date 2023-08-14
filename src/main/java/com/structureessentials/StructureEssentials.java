@@ -1,7 +1,8 @@
 package com.structureessentials;
 
+import com.cupboard.config.CupboardConfig;
 import com.structureessentials.command.Command;
-import com.structureessentials.config.Configuration;
+import com.structureessentials.config.CommonConfiguration;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.apache.logging.log4j.LogManager;
@@ -11,10 +12,10 @@ import java.util.Random;
 
 public class StructureEssentials implements ModInitializer
 {
-    public static final String MODID = "structureessentials";
-    public static final Logger LOGGER = LogManager.getLogger();
-    public static Configuration config = new Configuration();
-    public static Random rand = new Random();
+    public static final String                              MODID  = "structureessentials";
+    public static final Logger                              LOGGER = LogManager.getLogger();
+    public static       CupboardConfig<CommonConfiguration> config = new CupboardConfig<>(MODID, new CommonConfiguration());
+    public static       Random                              rand   = new Random();
 
     public StructureEssentials()
     {
@@ -24,7 +25,6 @@ public class StructureEssentials implements ModInitializer
     @Override
     public void onInitialize()
     {
-        config.load();
         CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, commandSelection) ->
         {
             dispatcher.register(new Command().build(buildContext));
