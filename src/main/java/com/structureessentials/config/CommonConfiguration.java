@@ -1,14 +1,14 @@
 package com.structureessentials.config;
 
+import com.cupboard.config.ICommonConfig;
 import com.google.gson.JsonObject;
-import com.structureessentials.StructureEssentials;
 
-public class CommonConfiguration
+public class CommonConfiguration implements ICommonConfig
 {
-    public boolean structurePlacementLogging = false;
-    public int structureSearchTimeout = 50;
-    public boolean useFastStructureLookup = true;
-    public boolean warnMissingRegistryEntry = true;
+    public boolean structurePlacementLogging  = false;
+    public int     structureSearchTimeout     = 50;
+    public boolean useFastStructureLookup     = true;
+    public boolean warnMissingRegistryEntry   = true;
     public boolean disableLegacyRandomCrashes = true;
 
     public CommonConfiguration()
@@ -36,7 +36,8 @@ public class CommonConfiguration
         root.add("useFastStructureLookup", entry3);
 
         final JsonObject entry4 = new JsonObject();
-        entry4.addProperty("desc:", "Prevents crashes for missing registry entries(e.g. a mod update structure ids) and turns them into a log error message instead, default: true");
+        entry4.addProperty("desc:",
+          "Prevents crashes for missing registry entries(e.g. a mod update structure ids) and turns them into a log error message instead, default: true");
         entry4.addProperty("warnMissingRegistryEntry", warnMissingRegistryEntry);
         root.add("warnMissingRegistryEntry", entry4);
 
@@ -50,12 +51,6 @@ public class CommonConfiguration
 
     public void deserialize(JsonObject data)
     {
-        if (data == null)
-        {
-            StructureEssentials.LOGGER.error("Config file was empty!");
-            return;
-        }
-
         structurePlacementLogging = data.get("structurePlacementLogging").getAsJsonObject().get("structurePlacementLogging").getAsBoolean();
         structureSearchTimeout = data.get("structureSearchTimeout").getAsJsonObject().get("structureSearchTimeout").getAsInt();
         useFastStructureLookup = data.get("useFastStructureLookup").getAsJsonObject().get("useFastStructureLookup").getAsBoolean();
