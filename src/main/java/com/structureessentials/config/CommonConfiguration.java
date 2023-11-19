@@ -54,5 +54,7 @@ public class CommonConfiguration implements ICommonConfig
         structurePlacementLogging = data.get("structurePlacementLogging").getAsJsonObject().get("structurePlacementLogging").getAsBoolean();
         structureSearchTimeout = data.get("structureSearchTimeout").getAsJsonObject().get("structureSearchTimeout").getAsInt();
         useFastStructureLookup = data.get("useFastStructureLookup").getAsJsonObject().get("useFastStructureLookup").getAsBoolean();
+        warnMissingRegistryEntry = data.get("warnMissingRegistryEntry").getAsJsonObject().get("warnMissingRegistryEntry").getAsBoolean();
+        disableLegacyRandomCrashes = data.get("disableLegacyRandomCrashes").getAsJsonObject().get("disableLegacyRandomCrashes").getAsBoolean();
     }
 }
