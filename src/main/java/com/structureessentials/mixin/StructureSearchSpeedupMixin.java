@@ -36,9 +36,9 @@ public class StructureSearchSpeedupMixin
         }
 
         boolean found = false;
-        for (int i = -128; i < 284; i+=16)
+        for (int i = -128; i < 284; i += 16)
         {
-            final Holder<Biome> biomeHolder = level.getBiome(pos.getWorldPosition().offset(0,i,0));
+            final Holder<Biome> biomeHolder = level.getBiome(pos.getWorldPosition().offset(0, i, 0));
 
             for (final Holder<Structure> structureHolder : holderSet)
             {
