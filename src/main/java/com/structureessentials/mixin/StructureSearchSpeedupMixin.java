@@ -4,18 +4,14 @@ import com.mojang.datafixers.util.Pair;
 import com.structureessentials.StructureEssentials;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.structure.Structure;
-import net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement;
-import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -40,9 +36,9 @@ public class StructureSearchSpeedupMixin
         }
 
         boolean found = false;
-        for (int i = -128; i < 284; i+=16)
+        for (int i = -128; i < 284; i += 16)
         {
-            final Holder<Biome> biomeHolder = level.getBiome(pos.getWorldPosition().offset(0,i,0));
+            final Holder<Biome> biomeHolder = level.getBiome(pos.getWorldPosition().offset(0, i, 0));
 
             for (final Holder<Structure> structureHolder : holderSet)
             {
