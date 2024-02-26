@@ -30,180 +30,173 @@ public class Command
     public LiteralArgumentBuilder<CommandSourceStack> build(CommandBuildContext buildContext)
     {
         return Commands.literal(MODID)
-          .then(
-            Commands.literal("getBiomeTags")
-              .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
-                .executes(context ->
-                {
-                    final ResourceKey<Biome>
-                      biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
-                    List<TagKey<Biome>> biomeTags =
-                      context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
+                .then(
+                        Commands.literal("getBiomeTags")
+                                .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
+                                        .executes(context ->
+                                        {
+                                            final ResourceKey<Biome>
+                                                    biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
+                                            List<TagKey<Biome>> biomeTags =
+                                                    context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
 
-                    context.getSource().sendSystemMessage(Component.literal("Biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
-                    for (final TagKey<Biome> biomeTag : biomeTags)
-                    {
-                        context.getSource().sendSystemMessage(Component.literal("#" + biomeTag.location()));
-                    }
+                                            context.getSource().sendSystemMessage(Component.literal("Biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
+                                            for (final TagKey<Biome> biomeTag : biomeTags)
+                                            {
+                                                context.getSource().sendSystemMessage(Component.literal("#" + biomeTag.location()));
+                                            }
 
-                    return 1;
-                })))
-          .then(
-            Commands.literal("getBiomesForTag")
-              .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
-                .executes(context ->
-                {
-                    final TagKey<Biome> biomeTag = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().right().get().key();
+                                            return 1;
+                                        })))
+                .then(
+                        Commands.literal("getBiomesForTag")
+                                .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
+                                        .executes(context ->
+                                        {
+                                            final TagKey<Biome> biomeTag = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().right().get().key();
 
-                    context.getSource().sendSystemMessage(Component.literal("Biomes for tag: " + biomeTag.location()).withStyle(ChatFormatting.GOLD));
-                    for (final Holder<Biome> biomeHolder : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
-                    {
-                        if (biomeHolder.is(biomeTag))
-                        {
-                            context.getSource().sendSystemMessage(Component.literal("Biome: " + biomeHolder.unwrapKey().get().location()));
-                        }
-                    }
+                                            context.getSource().sendSystemMessage(Component.literal("Biomes for tag: " + biomeTag.location()).withStyle(ChatFormatting.GOLD));
+                                            for (final Holder<Biome> biomeHolder : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
+                                            {
+                                                if (biomeHolder.is(biomeTag))
+                                                {
+                                                    context.getSource().sendSystemMessage(Component.literal("Biome: " + biomeHolder.unwrapKey().get().location()));
+                                                }
+                                            }
 
-                    return 1;
-                })))
-          .then(
-            Commands.literal("getStructuresNearby")
-              .requires(stack -> stack.hasPermission(2))
-              .executes(context ->
-              {
-                  final ServerLevel world = context.getSource().getLevel();
-                  final Map<Structure, LongSet> structures = new HashMap<>();
+                                            return 1;
+                                        })))
+                .then(
+                        Commands.literal("getStructuresNearby")
+                                .requires(stack -> stack.hasPermission(2))
+                                .executes(context ->
+                                {
+                                    final ServerLevel world = context.getSource().getLevel();
+                                    final Map<Structure, LongSet> structures = new HashMap<>();
 
-                  final ChunkPos start = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
-                  for (int x = 0; x < 5; x++)
-                  {
-                      for (int z = 0; z < 5; z++)
-                      {
-                          for (final Map.Entry<Structure, LongSet> entry : world.structureManager()
-                            .getAllStructuresAt(new BlockPos((start.x + x) << 4, 0, (start.z + z) << 4))
-                            .entrySet())
-                          {
-                              structures.computeIfAbsent(entry.getKey(), k -> new LongOpenHashSet(entry.getValue())).addAll(entry.getValue());
-                          }
-                      }
-                  }
+                                    final ChunkPos start = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
+                                    for (int x = -5; x < 5; x++)
+                                    {
+                                        for (int z = -5; z < 5; z++)
+                                        {
+                                            for (final Map.Entry<Structure, LongSet> entry : world.structureManager().getAllStructuresAt(new BlockPos((start.x + x) << 4, 0, (start.z + z) << 4)).entrySet())
+                                            {
+                                                structures.computeIfAbsent(entry.getKey(), k -> new LongOpenHashSet(entry.getValue())).addAll(entry.getValue());
+                                            }
+                                        }
+                                    }
 
-                  context.getSource().sendSystemMessage(Component.literal("Structures nearby: ").withStyle(ChatFormatting.GOLD));
-                  Map<BlockPos, String> structurePositions = new HashMap<>();
-                  for (Map.Entry<Structure, LongSet> structureEntry : structures.entrySet())
-                  {
-                      world.structureManager().fillStartsForStructure(structureEntry.getKey(), structureEntry.getValue(),
-                        structureStart ->
-                        {
-                            structurePositions.put(structureStart.getBoundingBox().getCenter(), context.getSource().registryAccess().registry(Registries.STRUCTURE).get()
-                              .getKey(structureEntry.getKey()).toString());
-                        }
-                      );
-                  }
+                                    context.getSource().sendSystemMessage(Component.literal("Structures nearby: ").withStyle(ChatFormatting.GOLD));
+                                    Map<BlockPos, String> structurePositions = new HashMap<>();
+                                    for (Map.Entry<Structure, LongSet> structureEntry : structures.entrySet())
+                                    {
+                                        world.structureManager().fillStartsForStructure(structureEntry.getKey(), structureEntry.getValue(),
+                                                structureStart ->
+                                                {
+                                                    structurePositions.put(structureStart.getBoundingBox().getCenter(), context.getSource().registryAccess().registry(Registries.STRUCTURE).get()
+                                                            .getKey(structureEntry.getKey()).toString());
+                                                }
+                                        );
+                                    }
 
-                  final List<Map.Entry<BlockPos, String>> sortedStructures = new ArrayList<>(structurePositions.entrySet());
-                  sortedStructures.sort(Comparator.comparingDouble(p -> p.getKey().distSqr(BlockPos.containing(context.getSource().getPosition()))));
+                                    final List<Map.Entry<BlockPos, String>> sortedStructures = new ArrayList<>(structurePositions.entrySet());
+                                    sortedStructures.sort(Comparator.comparingDouble(p -> p.getKey().distSqr(BlockPos.containing(context.getSource().getPosition()))));
 
-                  for (final Map.Entry<BlockPos, String> structureEntry : sortedStructures)
-                  {
-                      context.getSource()
-                        .sendSystemMessage(Component.literal(structureEntry.getValue())
-                          .append(Component.literal(" " + structureEntry.getKey()).withStyle(ChatFormatting.YELLOW).withStyle(style ->
-                            {
-                                return style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-                                  "/tp " + structureEntry.getKey().getX() + " " + structureEntry.getKey().getY() + " " + structureEntry.getKey().getZ()));
-                            }
-                          )));
-                  }
+                                    for (final Map.Entry<BlockPos, String> structureEntry : sortedStructures)
+                                    {
+                                        context.getSource().sendSystemMessage(Component.literal(structureEntry.getValue()).append(Component.literal(" " + structureEntry.getKey()).withStyle(ChatFormatting.YELLOW).withStyle(style ->
+                                                {
+                                                    return style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                                                            "/tp " + structureEntry.getKey().getX() + " " + structureEntry.getKey().getY() + " " + structureEntry.getKey().getZ()));
+                                                }
+                                        )));
+                                    }
 
-                  return 1;
-              }))
-          .then(
-            Commands.literal("getSimilarForBiome")
-              .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
-                .executes(context ->
-                {
-                    final ResourceKey<Biome>
-                      biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
-                    final List<TagKey<Biome>> biomeTags =
-                      context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
+                                    return 1;
+                                }))
+                .then(
+                        Commands.literal("getSimilarForBiome")
+                                .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))
+                                        .executes(context ->
+                                        {
+                                            final ResourceKey<Biome>
+                                                    biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
+                                            final List<TagKey<Biome>> biomeTags =
+                                                    context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
 
-                    final List<Holder<Biome>> similarBiomes = new ArrayList<>();
+                                            final List<Holder<Biome>> similarBiomes = new ArrayList<>();
 
-                    for (final Holder<Biome> currentBiome : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
-                    {
-                        for (final TagKey<Biome> tag : biomeTags)
-                        {
-                            if (currentBiome.is(tag))
-                            {
-                                similarBiomes.add(currentBiome);
-                            }
-                        }
-                    }
+                                            for (final Holder<Biome> currentBiome : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
+                                            {
+                                                for (final TagKey<Biome> tag : biomeTags)
+                                                {
+                                                    if (currentBiome.is(tag))
+                                                    {
+                                                        similarBiomes.add(currentBiome);
+                                                    }
+                                                }
+                                            }
 
-                    Map<Holder<Biome>, Integer> countMap = new HashMap<>();
+                                            Map<Holder<Biome>, Integer> countMap = new HashMap<>();
 
-                    for (Holder<Biome> similarBiome : similarBiomes)
-                    {
-                        for (TagKey<Biome> similarBiomeTagKey : similarBiome.tags().toList())
-                        {
-                            if (biomeTags.contains(similarBiomeTagKey))
-                            {
-                                countMap.put(similarBiome, countMap.getOrDefault(similarBiome, 0) + 2);
-                            }
-                            else
-                            {
-                                countMap.put(similarBiome, countMap.getOrDefault(similarBiome, 0) - 1);
-                            }
-                        }
-                    }
+                                            for (Holder<Biome> similarBiome : similarBiomes)
+                                            {
+                                                for (TagKey<Biome> similarBiomeTagKey : similarBiome.tags().toList())
+                                                {
+                                                    if (biomeTags.contains(similarBiomeTagKey))
+                                                    {
+                                                        countMap.put(similarBiome, countMap.getOrDefault(similarBiome, 0) + 2);
+                                                    } else
+                                                    {
+                                                        countMap.put(similarBiome, countMap.getOrDefault(similarBiome, 0) - 1);
+                                                    }
+                                                }
+                                            }
 
-                    final List<Map.Entry<Holder<Biome>, Integer>> sortedBiomeHolders = new ArrayList<>(countMap.entrySet());
-                    sortedBiomeHolders.sort(Comparator.comparingInt(e -> ((Map.Entry<Holder<Biome>, Integer>) e).getValue()).reversed());
+                                            final List<Map.Entry<Holder<Biome>, Integer>> sortedBiomeHolders = new ArrayList<>(countMap.entrySet());
+                                            sortedBiomeHolders.sort(Comparator.comparingInt(e -> ((Map.Entry<Holder<Biome>, Integer>) e).getValue()).reversed());
 
-                    Map<TagKey<Biome>, Double> tagCountMap = new HashMap<>();
-                    for (int i = 0; i < sortedBiomeHolders.size(); i++)
-                    {
-                        double weight = ((sortedBiomeHolders.size() / 6d) - i) / (sortedBiomeHolders.size() / 6d);
+                                            Map<TagKey<Biome>, Double> tagCountMap = new HashMap<>();
+                                            for (int i = 0; i < sortedBiomeHolders.size(); i++)
+                                            {
+                                                double weight = ((sortedBiomeHolders.size() / 6d) - i) / (sortedBiomeHolders.size() / 6d);
 
-                        if (i > sortedBiomeHolders.size() / 6d)
-                        {
-                            weight = -(i - sortedBiomeHolders.size() * (1 / 6d)) / (sortedBiomeHolders.size() * (5 / 6d));
-                        }
+                                                if (i > sortedBiomeHolders.size() / 6d)
+                                                {
+                                                    weight = -(i - sortedBiomeHolders.size() * (1 / 6d)) / (sortedBiomeHolders.size() * (5 / 6d));
+                                                }
 
 
-                        Map.Entry<Holder<Biome>, Integer> biomeHolderEntry = sortedBiomeHolders.get(i);
+                                                Map.Entry<Holder<Biome>, Integer> biomeHolderEntry = sortedBiomeHolders.get(i);
 
-                        for (final TagKey<Biome> biomeHolderEntryTag : biomeHolderEntry.getKey().tags().toList())
-                        {
-                            if (biomeTags.contains(biomeHolderEntryTag))
-                            {
-                                tagCountMap.put(biomeHolderEntryTag, tagCountMap.getOrDefault(biomeHolderEntryTag, 0d) + 1 * weight);
-                            }
-                        }
-                    }
+                                                for (final TagKey<Biome> biomeHolderEntryTag : biomeHolderEntry.getKey().tags().toList())
+                                                {
+                                                    if (biomeTags.contains(biomeHolderEntryTag))
+                                                    {
+                                                        tagCountMap.put(biomeHolderEntryTag, tagCountMap.getOrDefault(biomeHolderEntryTag, 0d) + 1 * weight);
+                                                    }
+                                                }
+                                            }
 
-                    context.getSource().sendSystemMessage(Component.literal("Similar biomes for: " + biome.location()).withStyle(ChatFormatting.GOLD));
+                                            context.getSource().sendSystemMessage(Component.literal("Similar biomes for: " + biome.location()).withStyle(ChatFormatting.GOLD));
 
-                    for (int i = 0; i < sortedBiomeHolders.size() && i < 10; i++)
-                    {
+                                            for (int i = 0; i < sortedBiomeHolders.size() && i < 10; i++)
+                                            {
 
-                        context.getSource()
-                          .sendSystemMessage(Component.literal(
-                            "Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location()));
-                    }
+                                                context.getSource().sendSystemMessage(Component.literal("Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location()));
+                                            }
 
-                    final List<Map.Entry<TagKey<Biome>, Double>> sortedBiomeTagKeys = new ArrayList<>(tagCountMap.entrySet());
-                    sortedBiomeTagKeys.sort(Comparator.comparingDouble(e -> ((Map.Entry<TagKey<Biome>, Double>) e).getValue()).reversed());
+                                            final List<Map.Entry<TagKey<Biome>, Double>> sortedBiomeTagKeys = new ArrayList<>(tagCountMap.entrySet());
+                                            sortedBiomeTagKeys.sort(Comparator.comparingDouble(e -> ((Map.Entry<TagKey<Biome>, Double>) e).getValue()).reversed());
 
-                    context.getSource().sendSystemMessage(Component.literal("Similar biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
+                                            context.getSource().sendSystemMessage(Component.literal("Similar biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
 
-                    for (final Map.Entry<TagKey<Biome>, Double> tag : sortedBiomeTagKeys)
-                    {
-                        context.getSource().sendSystemMessage(Component.literal("Weight:" + Math.round(tag.getValue()) + " Tag: #" + tag.getKey().location()));
-                    }
+                                            for (final Map.Entry<TagKey<Biome>, Double> tag : sortedBiomeTagKeys)
+                                            {
+                                                context.getSource().sendSystemMessage(Component.literal("Weight:" + Math.round(tag.getValue()) + " Tag: #" + tag.getKey().location()));
+                                            }
 
-                    return 1;
-                })));
+                                            return 1;
+                                        })));
     }
 }
