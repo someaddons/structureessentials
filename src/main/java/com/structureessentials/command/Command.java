@@ -75,9 +75,9 @@ public class Command
                                     final Map<Structure, LongSet> structures = new HashMap<>();
 
                                     final ChunkPos start = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
-                                    for (int x = 0; x < 5; x++)
+                                    for (int x = -5; x < 5; x++)
                                     {
-                                        for (int z = 0; z < 5; z++)
+                                        for (int z = -5; z < 5; z++)
                                         {
                                             for (final Map.Entry<Structure, LongSet> entry : world.structureManager().getAllStructuresAt(new BlockPos((start.x + x) << 4, 0, (start.z + z) << 4)).entrySet())
                                             {
