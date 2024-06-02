@@ -4,6 +4,9 @@ import com.mojang.datafixers.util.Pair;
 import com.structureessentials.StructureEssentials;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.QuartPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
@@ -36,22 +39,33 @@ public class StructureSearchSpeedupMixin
         }
 
         boolean found = false;
-        for (int i = -128; i < 284; i += 16)
+
+        int[] yLevels = Mth.outFromOrigin(65, level.getMinBuildHeight() + 1, level.getMaxBuildHeight(), 64).toArray();
+
+        final BlockPos worldPos = pos.getWorldPosition();
+
+        outer:
+        for (int i = 0; i < 4; i++)
         {
-            final Holder<Biome> biomeHolder = level.getBiome(pos.getWorldPosition().offset(0, i, 0));
+            final int xQuart = QuartPos.fromBlock(worldPos.getX() + i * 4);
+            final int zQuart = QuartPos.fromBlock(worldPos.getZ() + i * 4);
 
-            for (final Holder<Structure> structureHolder : holderSet)
+            for (int yBlock : yLevels)
             {
-                if (structureHolder.value().biomes().contains(biomeHolder))
+                final int yQuart = QuartPos.fromBlock(yBlock);
+                final Holder<Biome> holder = ((ServerLevel) level).getChunkSource()
+                  .getGenerator()
+                  .getBiomeSource()
+                  .getNoiseBiome(xQuart, yQuart, zQuart, ((ServerLevel) level).getChunkSource().randomState().sampler());
+
+                for (final Holder<Structure> structureHolder : holderSet)
                 {
-                    found = true;
-                    break;
+                    if (structureHolder.value().biomes().contains(holder))
+                    {
+                        found = true;
+                        break outer;
+                    }
                 }
-            }
-
-            if (found)
-            {
-                break;
             }
         }
 
