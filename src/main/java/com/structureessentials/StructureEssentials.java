@@ -3,11 +3,13 @@ package com.structureessentials;
 import com.cupboard.config.CupboardConfig;
 import com.structureessentials.command.Command;
 import com.structureessentials.config.CommonConfiguration;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,10 +24,10 @@ public class StructureEssentials
     public static       CupboardConfig<CommonConfiguration> config = new CupboardConfig<>(MODID, new CommonConfiguration());
     public static       Random                              rand   = new Random();
 
-    public StructureEssentials()
+    public StructureEssentials(IEventBus modEventBus, ModContainer modContainer)
     {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener(this::commandRegister);
+        modEventBus.addListener(this::setup);
+        NeoForge.EVENT_BUS.addListener(this::commandRegister);
     }
 
     @SubscribeEvent
