@@ -5,14 +5,19 @@
   "refmap": "structureessentials.refmap.json",
   "plugin": "com.structureessentials.mixin.MixinConfig",
   "mixins": [
+    "BlockInfoMixin",
+    "ChunkGeneratorMixin",
+    "ExplorationMapFunctionMixin",
+    "JigsawPlacementMixin",
+    "LegacyRandomSourceMixin",
+    "LocateCommandMixin",
+    "MappedRegistryMixin",
+    "ModifyStructureSettingsMixin",
     "PlacedFeatureErrorMixin",
+    "RandomSpreadStructurePlacementMixin",
     "StructurePlacementLogging",
     "StructureSearchSpeedupMixin",
-    "StructureSearchTimeoutMixin",
-    "BlockInfoMixin",
-    "MappedRegistryMixin",
-    "JigsawPlacementMixin",
-    "LegacyRandomSourceMixin"
+    "StructureSearchTimeoutMixin"
   ],
   "client": [
   ],
