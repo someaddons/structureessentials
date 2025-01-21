@@ -1,11 +1,14 @@
 package com.structureessentials.config;
 
+import com.cupboard.config.CupboardConfig;
 import com.cupboard.config.ICommonConfig;
 import com.google.gson.JsonObject;
+import com.structureessentials.StructureEssentials;
 
 public class CommonConfiguration implements ICommonConfig
 {
-    public boolean structurePlacementLogging  = false;
+    public static CupboardConfig<CommonConfiguration> config                    = new CupboardConfig<>(StructureEssentials.MODID, new CommonConfiguration());
+    public        boolean                             structurePlacementLogging = false;
     public int     structureSearchTimeout     = 50;
     public boolean useFastStructureLookup     = true;
     public boolean warnMissingRegistryEntry   = true;

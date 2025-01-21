@@ -1,7 +1,6 @@
 package com.structureessentials.mixin;
 
-import com.structureessentials.StructureEssentials;
-import net.minecraft.core.Holder;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.saveddata.maps.MapDecoration;
 import net.minecraft.world.level.storage.loot.functions.ExplorationMapFunction;
@@ -13,8 +12,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.List;
 
 @Mixin(ExplorationMapFunction.class)
 public class ExplorationMapFunctionMixin
@@ -32,6 +29,6 @@ public class ExplorationMapFunctionMixin
       final boolean p_210657_,
       final CallbackInfo ci)
     {
-        searchRadius = Math.min(searchRadius, StructureEssentials.config.getCommonConfig().mapSearchRadius);
+        searchRadius = Math.min(searchRadius, CommonConfiguration.config.getCommonConfig().mapSearchRadius);
     }
 }
