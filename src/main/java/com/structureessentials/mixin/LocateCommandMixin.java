@@ -1,6 +1,6 @@
 package com.structureessentials.mixin;
 
-import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.ResourceOrTagKeyArgument;
 import net.minecraft.server.commands.LocateCommand;
@@ -19,7 +19,7 @@ public class LocateCommandMixin
     @ModifyConstant(method = "locateStructure", constant = @Constant(intValue = 100), require = 0)
     private static int setRadius(int org)
     {
-        return StructureEssentials.config.getCommonConfig().locateSearchRadius;
+        return CommonConfiguration.config.getCommonConfig().locateSearchRadius;
     }
 
     @Unique
@@ -31,16 +31,16 @@ public class LocateCommandMixin
     @Inject(method = "locateStructure", at = @At("HEAD"))
     private static void adjustLimit(final CommandSourceStack p_214472_, final ResourceOrTagKeyArgument.Result<Structure> p_249893_, final CallbackInfoReturnable<Integer> cir)
     {
-        prevLimit = StructureEssentials.config.getCommonConfig().globalSearchRadius;
-        prevTimeout = StructureEssentials.config.getCommonConfig().structureSearchTimeout;
-        StructureEssentials.config.getCommonConfig().globalSearchRadius = StructureEssentials.config.getCommonConfig().locateSearchRadius;
-        StructureEssentials.config.getCommonConfig().structureSearchTimeout = prevTimeout += 30;
+        prevLimit = CommonConfiguration.config.getCommonConfig().globalSearchRadius;
+        prevTimeout = CommonConfiguration.config.getCommonConfig().structureSearchTimeout;
+        CommonConfiguration.config.getCommonConfig().globalSearchRadius = CommonConfiguration.config.getCommonConfig().locateSearchRadius;
+        CommonConfiguration.config.getCommonConfig().structureSearchTimeout = prevTimeout += 30;
     }
 
     @Inject(method = "locateStructure", at = @At("RETURN"))
     private static void restoreLimit(final CommandSourceStack p_214472_, final ResourceOrTagKeyArgument.Result<Structure> p_249893_, final CallbackInfoReturnable<Integer> cir)
     {
-        StructureEssentials.config.getCommonConfig().globalSearchRadius = prevLimit;
-        StructureEssentials.config.getCommonConfig().structureSearchTimeout = prevTimeout;
+        CommonConfiguration.config.getCommonConfig().globalSearchRadius = prevLimit;
+        CommonConfiguration.config.getCommonConfig().structureSearchTimeout = prevTimeout;
     }
 }

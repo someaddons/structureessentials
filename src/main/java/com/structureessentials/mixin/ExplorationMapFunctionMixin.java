@@ -1,6 +1,6 @@
 package com.structureessentials.mixin;
 
-import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.Holder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.storage.loot.functions.ExplorationMapFunction;
@@ -30,6 +30,6 @@ public class ExplorationMapFunctionMixin
         final boolean p_210657_,
         final CallbackInfo ci)
     {
-        searchRadius = Math.min(searchRadius, StructureEssentials.config.getCommonConfig().mapSearchRadius);
+        searchRadius = Math.min(searchRadius, CommonConfiguration.config.getCommonConfig().mapSearchRadius);
     }
 }

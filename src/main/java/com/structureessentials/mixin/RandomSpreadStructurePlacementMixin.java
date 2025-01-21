@@ -1,6 +1,6 @@
 package com.structureessentials.mixin;
 
-import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
@@ -42,8 +42,8 @@ public class RandomSpreadStructurePlacementMixin
       final RandomSpreadType p_227007_,
       final CallbackInfo ci)
     {
-        spacing = Mth.clamp((int) Math.round(spacing * StructureEssentials.config.getCommonConfig().spacingSeparationModifier), 2, 4095);
-        separation = Mth.clamp((int) Math.round(separation * StructureEssentials.config.getCommonConfig().spacingSeparationModifier), 1, 4095);
+        spacing = Mth.clamp((int) Math.round(spacing * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 2, 4095);
+        separation = Mth.clamp((int) Math.round(separation * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 1, 4095);
 
         if (spacing <= separation)
         {

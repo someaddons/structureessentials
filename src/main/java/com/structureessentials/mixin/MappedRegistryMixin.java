@@ -1,6 +1,7 @@
 package com.structureessentials.mixin;
 
 import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,7 +16,7 @@ public abstract class MappedRegistryMixin implements Registry
     @Redirect(method = "freeze", at = @At(value = "INVOKE", target = "Ljava/util/List;isEmpty()Z"), require = 0)
     private boolean onfreeze(final List instance)
     {
-        if (!StructureEssentials.config.getCommonConfig().warnMissingRegistryEntry)
+        if (!CommonConfiguration.config.getCommonConfig().warnMissingRegistryEntry)
         {
             return instance.isEmpty();
         }
