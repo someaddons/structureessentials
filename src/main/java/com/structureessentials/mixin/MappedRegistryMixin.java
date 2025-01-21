@@ -1,10 +1,8 @@
 package com.structureessentials.mixin;
 
-import com.mojang.serialization.Lifecycle;
 import com.structureessentials.StructureEssentials;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
