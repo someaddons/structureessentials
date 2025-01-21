@@ -2,6 +2,7 @@ package com.structureessentials.mixin;
 
 import com.mojang.datafixers.util.Pair;
 import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
@@ -47,7 +48,7 @@ public class StructureSearchTimeoutMixin
             , at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkGenerator;getStructureGeneratingAt(Ljava/util/Set;Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/world/level/StructureManager;ZLnet/minecraft/world/level/levelgen/structure/placement/StructurePlacement;Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Pair;"), cancellable = true)
     private void onSearchTiming(Set<Holder<Structure>> holderSet, ServerLevel p_223183_, StructureManager p_223184_, BlockPos p_223185_, boolean p_223186_, ConcentricRingsStructurePlacement p_223187_, CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
     {
-        if (staticTime != 0 && System.currentTimeMillis() - staticTime > StructureEssentials.config.getCommonConfig().structureSearchTimeout * 1000L)
+        if (staticTime != 0 && System.currentTimeMillis() - staticTime > CommonConfiguration.config.getCommonConfig().structureSearchTimeout * 1000L)
         {
             if (!reported)
             {
@@ -63,7 +64,7 @@ public class StructureSearchTimeoutMixin
             , at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkGenerator;getStructureGeneratingAt(Ljava/util/Set;Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/world/level/StructureManager;ZLnet/minecraft/world/level/levelgen/structure/placement/StructurePlacement;Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Pair;"), cancellable = true)
     private static void onSearchStartStaticTiming(Set<Holder<Structure>> holderSet, LevelReader p_223190_, StructureManager p_223191_, int p_223192_, int p_223193_, int p_223194_, boolean p_223195_, long p_223196_, RandomSpreadStructurePlacement p_223197_, CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
     {
-        if (staticTime != 0 && System.currentTimeMillis() - staticTime > StructureEssentials.config.getCommonConfig().structureSearchTimeout * 1000L)
+        if (staticTime != 0 && System.currentTimeMillis() - staticTime > CommonConfiguration.config.getCommonConfig().structureSearchTimeout * 1000L)
         {
             if (!reported)
             {

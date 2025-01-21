@@ -1,11 +1,9 @@
 package com.structureessentials.mixin;
 
-import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.Holder;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.level.saveddata.maps.MapDecoration;
 import net.minecraft.world.level.storage.loot.functions.ExplorationMapFunction;
-import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -26,6 +24,6 @@ public class ExplorationMapFunctionMixin
     private void initSearchRange(
         final List list, final TagKey tagKey, final Holder holder, final byte b, final int i, final boolean bl, final CallbackInfo ci)
     {
-        searchRadius = Math.min(searchRadius, StructureEssentials.config.getCommonConfig().mapSearchRadius);
+        searchRadius = Math.min(searchRadius, CommonConfiguration.config.getCommonConfig().mapSearchRadius);
     }
 }

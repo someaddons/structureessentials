@@ -1,6 +1,6 @@
 package com.structureessentials.mixin;
 
-import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -25,7 +25,7 @@ public class MixinConfig implements IMixinConfigPlugin
     @Override
     public boolean shouldApplyMixin(final String targetClassName, final String mixinClassName)
     {
-        if (mixinClassName.contains("LegacyRandomSourceMixin") && !StructureEssentials.config.getCommonConfig().disableLegacyRandomCrashes)
+        if (mixinClassName.contains("LegacyRandomSourceMixin") && !CommonConfiguration.config.getCommonConfig().disableLegacyRandomCrashes)
         {
             return false;
         }
