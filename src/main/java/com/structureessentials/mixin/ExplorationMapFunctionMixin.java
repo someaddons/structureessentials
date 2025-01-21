@@ -24,13 +24,7 @@ public class ExplorationMapFunctionMixin
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void initSearchRange(
-      final LootItemCondition[] p_210652_,
-      final TagKey p_210653_,
-      final MapDecoration.Type p_210654_,
-      final byte p_210655_,
-      final int p_210656_,
-      final boolean p_210657_,
-      final CallbackInfo ci)
+        final List list, final TagKey tagKey, final Holder holder, final byte b, final int i, final boolean bl, final CallbackInfo ci)
     {
         searchRadius = Math.min(searchRadius, StructureEssentials.config.getCommonConfig().mapSearchRadius);
     }

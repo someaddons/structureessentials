@@ -63,30 +63,30 @@ public class StructureEssentials implements ModInitializer
         final Registry<Biome> biomeRegistry = registryAccess.registry(Registries.BIOME).get();
 
         final Map<ResourceLocation, TagKey<Biome>> directReplacementTags = new HashMap<>();
-        directReplacementTags.put(new ResourceLocation ("deep_ocean"), BiomeTags.IS_DEEP_OCEAN);
-        directReplacementTags.put(new ResourceLocation("ocean"), BiomeTags.IS_OCEAN);
-        directReplacementTags.put(new ResourceLocation("river"), BiomeTags.IS_RIVER);
-        directReplacementTags.put(new ResourceLocation("badlands"), BiomeTags.IS_BADLANDS);
-        directReplacementTags.put(new ResourceLocation("eroded_badlands"), BiomeTags.IS_BADLANDS);
-        directReplacementTags.put(new ResourceLocation("wooded_badlands"), BiomeTags.IS_BADLANDS);
-        directReplacementTags.put(new ResourceLocation("windswept_hills"), BiomeTags.IS_HILL);
-        directReplacementTags.put(new ResourceLocation("windswept_gravelly_hills"), BiomeTags.IS_HILL);
-        directReplacementTags.put(new ResourceLocation("taiga"), BiomeTags.IS_TAIGA);
-        directReplacementTags.put(new ResourceLocation("jungle"), BiomeTags.IS_JUNGLE);
-        directReplacementTags.put(new ResourceLocation("forest"), BiomeTags.IS_FOREST);
-        directReplacementTags.put(new ResourceLocation("savanna"), BiomeTags.IS_SAVANNA);
-        directReplacementTags.put(new ResourceLocation("deep_dark"), BiomeTags.HAS_ANCIENT_CITY);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace ("deep_ocean"), BiomeTags.IS_DEEP_OCEAN);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("ocean"), BiomeTags.IS_OCEAN);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("river"), BiomeTags.IS_RIVER);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("badlands"), BiomeTags.IS_BADLANDS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("eroded_badlands"), BiomeTags.IS_BADLANDS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("wooded_badlands"), BiomeTags.IS_BADLANDS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("windswept_hills"), BiomeTags.IS_HILL);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("windswept_gravelly_hills"), BiomeTags.IS_HILL);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("taiga"), BiomeTags.IS_TAIGA);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("jungle"), BiomeTags.IS_JUNGLE);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("forest"), BiomeTags.IS_FOREST);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("savanna"), BiomeTags.IS_SAVANNA);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("deep_dark"), BiomeTags.HAS_ANCIENT_CITY);
 
-        directReplacementTags.put(new ResourceLocation("plains"), ConventionalBiomeTags.PLAINS);
-        directReplacementTags.put(new ResourceLocation("snowy_plains"), ConventionalBiomeTags.SNOWY_PLAINS);
-        directReplacementTags.put(new ResourceLocation("desert"), ConventionalBiomeTags.DESERT);
-        directReplacementTags.put(new ResourceLocation("swamp"), ConventionalBiomeTags.SWAMP);
-        directReplacementTags.put(new ResourceLocation("flower_forest"), ConventionalBiomeTags.FLOWER_FORESTS);
-        directReplacementTags.put(new ResourceLocation("birch_forest"), ConventionalBiomeTags.BIRCH_FOREST);
-        directReplacementTags.put(new ResourceLocation("stony_shore"), ConventionalBiomeTags.STONY_SHORES);
-        directReplacementTags.put(new ResourceLocation("mushroom_fields"), ConventionalBiomeTags.MUSHROOM);
-        directReplacementTags.put(new ResourceLocation("warped_forest"), ConventionalBiomeTags.NETHER_FORESTS);
-        directReplacementTags.put(new ResourceLocation("crimson_forest"), ConventionalBiomeTags.NETHER_FORESTS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("plains"), ConventionalBiomeTags.PLAINS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("snowy_plains"), ConventionalBiomeTags.SNOWY_PLAINS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("desert"), ConventionalBiomeTags.DESERT);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("swamp"), ConventionalBiomeTags.SWAMP);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("flower_forest"), ConventionalBiomeTags.FLOWER_FORESTS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("birch_forest"), ConventionalBiomeTags.BIRCH_FOREST);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("stony_shore"), ConventionalBiomeTags.STONY_SHORES);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("mushroom_fields"), ConventionalBiomeTags.MUSHROOM);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("warped_forest"), ConventionalBiomeTags.NETHER_FORESTS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("crimson_forest"), ConventionalBiomeTags.NETHER_FORESTS);
 
         for (final Holder.Reference<Structure> holder : holders)
         {
