@@ -1,7 +1,7 @@
 package com.structureessentials.mixin;
 
 import com.mojang.datafixers.util.Pair;
-import com.structureessentials.StructureEssentials;
+import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
@@ -33,7 +33,7 @@ public class StructureSearchSpeedupMixin
       final StructurePlacement placement,
       final ChunkPos pos, final CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
     {
-        if (holderSet.isEmpty() || !StructureEssentials.config.getCommonConfig().useFastStructureLookup)
+        if (holderSet.isEmpty() || !CommonConfiguration.config.getCommonConfig().useFastStructureLookup)
         {
             return;
         }

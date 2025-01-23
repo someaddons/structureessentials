@@ -1,6 +1,5 @@
 package com.structureessentials;
 
-import com.cupboard.config.CupboardConfig;
 import com.structureessentials.command.Command;
 import com.structureessentials.config.CommonConfiguration;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
@@ -35,7 +34,6 @@ public class StructureEssentials
 {
     public static final String                              MODID  = "structureessentials";
     public static final Logger                              LOGGER = LogManager.getLogger();
-    public static       CupboardConfig<CommonConfiguration> config = new CupboardConfig<>(MODID, new CommonConfiguration());
     public static       Random                              rand   = new Random();
 
     public StructureEssentials()
@@ -58,7 +56,7 @@ public class StructureEssentials
 
     private void onServerStart(ServerAboutToStartEvent event)
     {
-        if (!StructureEssentials.config.getCommonConfig().autoBiomeCompat)
+        if (!CommonConfiguration.config.getCommonConfig().autoBiomeCompat)
         {
             return;
         }
@@ -185,14 +183,15 @@ public class StructureEssentials
 
                     double percent = ((double) entry.getIntValue() / orgScore);
                     double previousValue = potentialBiomes.getOrDefault(entry.getKey(), 0);
-                    percent = (percent * percent) + (percent >= 0.5 * StructureEssentials.config.getCommonConfig().autoBiomeCompatStrictness && previousValue < 100 ? 100 : 0);
+                    percent = (percent * percent) + (percent >= 0.5 * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness && previousValue < 100 ? 100 : 0);
                     potentialBiomes.put(entry.getKey(), previousValue + percent);
                 }
             }
 
             if (!potentialBiomes.isEmpty())
             {
-                double similarityThreshold = 100 + ((0.74 * 0.74) + Math.log(biomeHolderSet.size()) * 0.1905) * StructureEssentials.config.getCommonConfig().autoBiomeCompatStrictness;
+                double similarityThreshold =
+                    100 + ((0.74 * 0.74) + Math.log(biomeHolderSet.size()) * 0.1905) * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness;
                 for (Iterator<Holder<Biome>> iterator = toAdd.iterator(); iterator.hasNext(); )
                 {
                     final var tagAdded = iterator.next();
@@ -234,9 +233,10 @@ public class StructureEssentials
                     tagName = holder.value().biomes().unwrap().left().get().location().toString();
                 }
 
-                if (StructureEssentials.config.getCommonConfig().autoBiomeCompatLogging)
+                if (CommonConfiguration.config.getCommonConfig().autoBiomeCompatLogging)
                 {
-                    double similarityThreshold = 100 + ((0.74 * 0.74) + Math.log(biomeHolderSet.size()) * 0.1905) * StructureEssentials.config.getCommonConfig().autoBiomeCompatStrictness;
+                    double similarityThreshold =
+                        100 + ((0.74 * 0.74) + Math.log(biomeHolderSet.size()) * 0.1905) * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness;
                     StructureEssentials.LOGGER.warn(
                       "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (similarityThreshold * 1000)) / 1000.0 + " biomes: "
                         + toAdd.stream()
