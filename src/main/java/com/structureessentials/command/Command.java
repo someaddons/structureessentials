@@ -1,6 +1,8 @@
 package com.structureessentials.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.structureessentials.StructureEssentials;
+import com.structureessentials.Timings;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -18,6 +20,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.Music;
 import net.minecraft.tags.TagKey;
@@ -54,6 +57,50 @@ public class Command
 
                             return 1;
                         })))
+            .then(
+                Commands.literal("showGenerationTimes")
+                    .executes(context ->
+                    {
+                        int count = 0;
+                        List<Map.Entry<ResourceLocation, Long>> sortedFeatures = new ArrayList<>(Timings.featureTimings.entrySet());
+                        sortedFeatures.sort(Comparator.comparingLong(e -> ((Map.Entry<ResourceLocation, Long>) (e)).getValue()).reversed());
+                        context.getSource().sendSystemMessage(Component.literal("Features timings:").withStyle(ChatFormatting.GOLD));
+                        StructureEssentials.LOGGER.warn("Placed Feature timings in ms:");
+                        for (final Map.Entry<ResourceLocation, Long> entry : sortedFeatures)
+                        {
+                            count++;
+
+                            if (count < 5)
+                            {
+                                context.getSource()
+                                    .sendSystemMessage(Component.literal("#:" + count + " id: " + entry.getKey() + " time: " + (entry.getValue() / 1000000))
+                                        .withStyle(ChatFormatting.WHITE));
+                            }
+
+                            StructureEssentials.LOGGER.warn("#:" + count + " id: " + entry.getKey() + " time: " + (entry.getValue() / 100000));
+                        }
+
+                        count = 0;
+                        List<Map.Entry<ResourceLocation, Long>> sortedStructures = new ArrayList<>(Timings.structureTimings.entrySet());
+                        sortedStructures.sort(Comparator.comparingLong(e -> ((Map.Entry<ResourceLocation, Long>) (e)).getValue()).reversed());
+                        context.getSource().sendSystemMessage(Component.literal("Structure timings:").withStyle(ChatFormatting.GOLD));
+                        StructureEssentials.LOGGER.warn("Structure timings in ms:");
+                        for (final Map.Entry<ResourceLocation, Long> entry : sortedStructures)
+                        {
+                            count++;
+
+                            if (count < 5)
+                            {
+                                context.getSource()
+                                    .sendSystemMessage(Component.literal("#:" + count + " id: " + entry.getKey() + " time: " + (entry.getValue() / 1000000))
+                                        .withStyle(ChatFormatting.WHITE));
+                            }
+
+                            StructureEssentials.LOGGER.warn("#:" + count + " id: " + entry.getKey() + " time: " + (entry.getValue() / 100000));
+                        }
+
+                        return 1;
+                    }))
             .then(
                 Commands.literal("getBiomesForTag")
                     .then(Commands.argument("biome", ResourceOrTagArgument.resourceOrTag(buildContext, Registries.BIOME))

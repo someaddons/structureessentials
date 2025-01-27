@@ -16,7 +16,9 @@
     "RandomSpreadStructurePlacementMixin",
     "StructurePlacementLogging",
     "StructureSearchSpeedupMixin",
-    "StructureSearchTimeoutMixin"
+    "StructureSearchTimeoutMixin",
+    "StructureStartTimingMixin",
+    "StructureTimingMixin"
   ],
   "client": [
   ],
