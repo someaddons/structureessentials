@@ -25,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StructureEssentials implements ModInitializer
 {
@@ -50,6 +51,9 @@ public class StructureEssentials implements ModInitializer
 
     private void onServerStart(MinecraftServer server)
     {
+        Timings.featureTimings = new ConcurrentHashMap<>();
+        Timings.structureTimings = new ConcurrentHashMap<>();
+
         if (!CommonConfiguration.config.getCommonConfig().autoBiomeCompat)
         {
             return;
@@ -211,7 +215,8 @@ public class StructureEssentials implements ModInitializer
                         // Check fitting, temp/downfall
                         float temp = Command.getAdjustedTemp(sortedBiome.getKey());
                         final float downFall = sortedBiome.getKey().value().climateSettings.downfall();
-                        if (temp > minTemp && temp < maxTemp && downFall < maxDownfall && downFall > minDownfall && !sortedBiome.getKey().toString().contains("small"))
+                        if (temp > minTemp && temp < maxTemp && downFall < maxDownfall && downFall > minDownfall && !sortedBiome.getKey().toString().contains("small")
+                            && !sortedBiome.getKey().is(BiomeTags.IS_RIVER))
                         {
                             toAdd.add(sortedBiome.getKey());
                         }
