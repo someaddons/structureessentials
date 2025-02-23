@@ -9,6 +9,7 @@
     "ExplorationMapFunctionMixin",
     "JigsawPlacementMixin",
     "LegacyRandomSourceMixin",
+    "LevelCreatedCallback",
     "LocateCommandMixin",
     "MappedRegistryMixin",
     "ModifyStructureSettingsMixin",
@@ -17,6 +18,7 @@
     "StructurePlacementLogging",
     "StructureSearchSpeedupMixin",
     "StructureSearchTimeoutMixin",
+    "StructureStartMinDistMixin",
     "StructureStartTimingMixin",
     "StructureTimingMixin"
   ],
