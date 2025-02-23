@@ -11,6 +11,8 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
@@ -18,7 +20,6 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -33,15 +34,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Mod(StructureEssentials.MODID)
 public class StructureEssentials
 {
-    public static final String                              MODID  = "structureessentials";
-    public static final Logger                              LOGGER = LogManager.getLogger();
-    public static       Random                              rand   = new Random();
+    public static final String MODID  = "structureessentials";
+    public static final Logger LOGGER = LogManager.getLogger();
+    public static       Random rand   = new Random();
 
     public StructureEssentials()
     {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener(this::commandRegister);
-        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener(this::onServerStart);
     }
 
     @SubscribeEvent
@@ -55,7 +55,7 @@ public class StructureEssentials
         LOGGER.info(MODID + " mod initialized");
     }
 
-    private void onServerStart(ServerAboutToStartEvent event)
+    public static void onServerStart(MinecraftServer server)
     {
         Timings.featureTimings = new ConcurrentHashMap<>();
         Timings.structureTimings = new ConcurrentHashMap<>();
@@ -65,12 +65,12 @@ public class StructureEssentials
             return;
         }
 
-        final RegistryAccess.Frozen registryAccess = event.getServer().registryAccess();
+        final RegistryAccess.Frozen registryAccess = server.registryAccess();
         List<Holder.Reference<Structure>> holders = registryAccess.registryOrThrow(Registries.STRUCTURE).holders().toList();
         final Registry<Biome> biomeRegistry = registryAccess.registry(Registries.BIOME).get();
 
         final Map<ResourceLocation, TagKey<Biome>> directReplacementTags = new HashMap<>();
-        directReplacementTags.put(new ResourceLocation ("deep_ocean"), BiomeTags.IS_DEEP_OCEAN);
+        directReplacementTags.put(new ResourceLocation("deep_ocean"), BiomeTags.IS_DEEP_OCEAN);
         directReplacementTags.put(new ResourceLocation("ocean"), BiomeTags.IS_OCEAN);
         directReplacementTags.put(new ResourceLocation("river"), BiomeTags.IS_RIVER);
         directReplacementTags.put(new ResourceLocation("badlands"), BiomeTags.IS_BADLANDS);
@@ -101,6 +101,11 @@ public class StructureEssentials
 
             for (Holder<Biome> biome : holder.value().biomes())
             {
+                if (!holder.isBound())
+                {
+                    continue;
+                }
+
                 biomeHolderSet.add(biome);
                 float temp = Command.getAdjustedTemp(biome);
                 if (temp < minTemp)
@@ -135,6 +140,32 @@ public class StructureEssentials
             minDownfall -= 0.35f;
             maxDownfall += 0.35f;
 
+            final Map<ServerLevel, Set<Holder<Biome>>> allowedDimensions = new HashMap<>();
+            for (final var level : server.getAllLevels())
+            {
+                final Set<Holder<Biome>> dimensionbiomes = level.getChunkSource().getGenerator().getBiomeSource().possibleBiomes();
+                allowedDimensions.put(level, dimensionbiomes);
+            }
+
+            for (Iterator<Map.Entry<ServerLevel, Set<Holder<Biome>>>> iterator = allowedDimensions.entrySet().iterator(); iterator.hasNext(); )
+            {
+                final var dimensionBiomes = iterator.next();
+
+                boolean contained = false;
+                for (final var biomeHolder : biomeHolderSet)
+                {
+                    if (dimensionBiomes.getValue().contains(biomeHolder))
+                    {
+                        contained = true;
+                        break;
+                    }
+                }
+
+                if (!contained)
+                {
+                    iterator.remove();
+                }
+            }
 
             Set<TagKey<Biome>> addedTags = new HashSet<>();
 
@@ -179,8 +210,8 @@ public class StructureEssentials
                 {
                     final Object2IntMap.Entry<Holder<Biome>> entry = similar.get(i);
                     if (biomeHolderSet.contains(entry.getKey()) || entry.getKey().value().getGenerationSettings().features().isEmpty()
-                          || entry.getKey().unwrapKey().get() == Biomes.THE_END
-                          || entry.getIntValue() <= 1)
+                        || entry.getKey().unwrapKey().get() == Biomes.THE_END
+                        || entry.getIntValue() <= 1)
                     {
                         continue;
                     }
@@ -200,7 +231,7 @@ public class StructureEssentials
                 {
                     final var tagAdded = iterator.next();
                     double score = potentialBiomes.getOrDefault(tagAdded, 0);
-                    if (score < (similarityThreshold - 100)/1.3)
+                    if (score < (similarityThreshold - 100) / 1.3)
                     {
                         iterator.remove();
                     }
@@ -229,6 +260,26 @@ public class StructureEssentials
                 }
             }
 
+            for (Iterator<Holder<Biome>> iterator = toAdd.iterator(); iterator.hasNext(); )
+            {
+                final var biomeHolder = iterator.next();
+                boolean containedDimension = false;
+
+                for (final Set<Holder<Biome>> dimensionBiomes : allowedDimensions.values())
+                {
+                    if (dimensionBiomes.contains(biomeHolder))
+                    {
+                        containedDimension = true;
+                        break;
+                    }
+                }
+
+                if (!containedDimension)
+                {
+                    iterator.remove();
+                }
+            }
+
             if (!toAdd.isEmpty())
             {
                 String tagName = biomeRegistry.getKey(holder.value().biomes().iterator().next().value()).toString();
@@ -243,8 +294,8 @@ public class StructureEssentials
                     double similarityThreshold =
                         100 + ((0.74 * 0.74) + Math.log(biomeHolderSet.size()) * 0.1905) * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness;
                     StructureEssentials.LOGGER.warn(
-                      "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (similarityThreshold * 1000)) / 1000.0 + " biomes: "
-                        + toAdd.stream()
+                        "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (similarityThreshold * 1000)) / 1000.0 + " biomes: "
+                            + toAdd.stream()
                             .map(e -> e.unwrapKey().get().location() + ":" + ((int) (potentialBiomes.getOrDefault(e, 0) * 1000)) / 1000.0)
                             .toList());
                 }

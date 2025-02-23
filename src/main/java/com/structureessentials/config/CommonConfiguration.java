@@ -17,6 +17,9 @@ public class CommonConfiguration implements ICommonConfig
     public int     globalSearchRadius         = 70;
     public int     locateSearchRadius         = 110;
     public double  spacingSeparationModifier  = 1.0d;
+    public int     minimumStructureDistance        = 64;
+    public boolean minimumStructureDistanceEnabled = false;
+    public boolean minimumStructureDistanceLogging = false;
     public boolean autoBiomeCompat  = true;
     public boolean autoBiomeCompatLogging  = false;
     public double  autoBiomeCompatStrictness  = 1.0d;
@@ -66,6 +69,14 @@ public class CommonConfiguration implements ICommonConfig
         entry9.addProperty("spacingSeparationModifier", spacingSeparationModifier);
         root.add("spacingSeparationModifier", entry9);
 
+        final JsonObject entry15 = new JsonObject();
+        entry15.addProperty("desc:",
+            "Set a minimum distance in blocks between structures generated which prevents structure overlaps(not 100% but close). Not recommended to use higher values, as that may strain the worldgen due to repeated structure retries and can prevent surfaces structures when there is some in a cave below. If you want structures more spaced out than this use the spacing/seperation modifier. Default: 64 blocks, range 16-512");
+        entry15.addProperty("minimumStructureDistance", minimumStructureDistance);
+        entry15.addProperty("enabled", minimumStructureDistanceEnabled);
+        entry15.addProperty("logOverlaps", minimumStructureDistanceLogging);
+        root.add("minimumStructureDistance", entry15);
+
         final JsonObject entry10 = new JsonObject();
         entry10.addProperty("desc:",
           "Automatically analyzes present biomes and adjust structure spawning to include fitting ones. Default: true");
@@ -114,5 +125,8 @@ public class CommonConfiguration implements ICommonConfig
         autoBiomeCompat = data.get("autoBiomeCompat").getAsJsonObject().get("autoBiomeCompat").getAsBoolean();
         autoBiomeCompatLogging = data.get("autoBiomeCompatLogging").getAsJsonObject().get("autoBiomeCompatLogging").getAsBoolean();
         autoBiomeCompatStrictness = data.get("autoBiomeCompatStrictness").getAsJsonObject().get("autoBiomeCompatStrictness").getAsDouble();
+        minimumStructureDistance = Math.min(512, Math.max(16, data.get("minimumStructureDistance").getAsJsonObject().get("minimumStructureDistance").getAsInt()));
+        minimumStructureDistanceEnabled = data.get("minimumStructureDistance").getAsJsonObject().get("enabled").getAsBoolean();
+        minimumStructureDistanceLogging = data.get("minimumStructureDistance").getAsJsonObject().get("logOverlaps").getAsBoolean();
     }
 }
