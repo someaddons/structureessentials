@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBiomeTags;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
@@ -16,6 +15,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
@@ -45,11 +45,10 @@ public class StructureEssentials implements ModInitializer
         {
             dispatcher.register(new Command().build(buildContext));
         });
-        ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStart);
         LOGGER.info(MODID + " mod initialized");
     }
 
-    private void onServerStart(MinecraftServer server)
+    public static void onServerStart(MinecraftServer server)
     {
         Timings.featureTimings = new ConcurrentHashMap<>();
         Timings.structureTimings = new ConcurrentHashMap<>();
@@ -100,6 +99,11 @@ public class StructureEssentials implements ModInitializer
 
             for (Holder<Biome> biome : holder.value().biomes())
             {
+                if (!holder.isBound())
+                {
+                    continue;
+                }
+
                 biomeHolderSet.add(biome);
                 float temp = Command.getAdjustedTemp(biome);
                 if (temp < minTemp)
@@ -134,6 +138,32 @@ public class StructureEssentials implements ModInitializer
             minDownfall -= 0.35f;
             maxDownfall += 0.35f;
 
+            final Map<ServerLevel, Set<Holder<Biome>>> allowedDimensions = new HashMap<>();
+            for (final var level : server.getAllLevels())
+            {
+                final Set<Holder<Biome>> dimensionbiomes = level.getChunkSource().getGenerator().getBiomeSource().possibleBiomes();
+                allowedDimensions.put(level, dimensionbiomes);
+            }
+
+            for (Iterator<Map.Entry<ServerLevel, Set<Holder<Biome>>>> iterator = allowedDimensions.entrySet().iterator(); iterator.hasNext(); )
+            {
+                final var dimensionBiomes = iterator.next();
+
+                boolean contained = false;
+                for (final var biomeHolder : biomeHolderSet)
+                {
+                    if (dimensionBiomes.getValue().contains(biomeHolder))
+                    {
+                        contained = true;
+                        break;
+                    }
+                }
+
+                if (!contained)
+                {
+                    iterator.remove();
+                }
+            }
 
             Set<TagKey<Biome>> addedTags = new HashSet<>();
 
@@ -199,7 +229,7 @@ public class StructureEssentials implements ModInitializer
                 {
                     final var tagAdded = iterator.next();
                     double score = potentialBiomes.getOrDefault(tagAdded, 0);
-                    if (score < (similarityThreshold - 100)/1.3)
+                    if (score < (similarityThreshold - 100) / 1.3)
                     {
                         iterator.remove();
                     }
@@ -225,6 +255,26 @@ public class StructureEssentials implements ModInitializer
                     {
                         break;
                     }
+                }
+            }
+
+            for (Iterator<Holder<Biome>> iterator = toAdd.iterator(); iterator.hasNext(); )
+            {
+                final var biomeHolder = iterator.next();
+                boolean containedDimension = false;
+
+                for (final Set<Holder<Biome>> dimensionBiomes : allowedDimensions.values())
+                {
+                    if (dimensionBiomes.contains(biomeHolder))
+                    {
+                        containedDimension = true;
+                        break;
+                    }
+                }
+
+                if (!containedDimension)
+                {
+                    iterator.remove();
                 }
             }
 
