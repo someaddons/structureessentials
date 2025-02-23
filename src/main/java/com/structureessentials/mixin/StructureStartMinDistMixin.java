@@ -50,11 +50,13 @@ public class StructureStartMinDistMixin
         }
 
         final int distance = CommonConfiguration.config.getCommonConfig().minimumStructureDistance;
+        final int xzOffset = 3000000 * distance;
 
         for (final var piece : cir.getReturnValue().getPieces())
         {
             final BlockPos center = piece.getLocatorPosition();
-            final Structure nearby = nearbyStructures.get(BlockPos.asLong(center.getX() / distance, center.getY() / distance, center.getZ() / distance));
+            final Structure nearby =
+                nearbyStructures.get(BlockPos.asLong((center.getX() + xzOffset) / distance, (center.getY() + 2000) / distance, (center.getZ() + xzOffset) / distance));
             if (nearby != null)
             {
                 if (CommonConfiguration.config.getCommonConfig().minimumStructureDistanceLogging)
@@ -71,7 +73,8 @@ public class StructureStartMinDistMixin
         for (final var piece : cir.getReturnValue().getPieces())
         {
             final BlockPos center = piece.getLocatorPosition();
-            nearbyStructures.put(BlockPos.asLong(center.getX() / distance, center.getY() / distance, center.getZ() / distance), (Structure) (Object) this);
+            nearbyStructures.put(BlockPos.asLong((center.getX() + xzOffset) / distance, (center.getY() + 2000) / distance, (center.getZ() + xzOffset) / distance),
+                (Structure) (Object) this);
         }
     }
 }
