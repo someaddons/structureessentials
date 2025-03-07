@@ -2,9 +2,11 @@ package com.structureessentials;
 
 import com.structureessentials.command.Command;
 import com.structureessentials.config.CommonConfiguration;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBiomeTags;
@@ -13,6 +15,7 @@ import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -21,11 +24,14 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static net.minecraft.world.level.biome.Biomes.SMALL_END_ISLANDS;
 
 public class StructureEssentials implements ModInitializer
 {
@@ -48,19 +54,44 @@ public class StructureEssentials implements ModInitializer
         LOGGER.info(MODID + " mod initialized");
     }
 
-    public static void onServerStart(MinecraftServer server)
+    public static void onServerStart
+        (
+            MinecraftServer server
+        )
     {
         Timings.featureTimings = new ConcurrentHashMap<>();
         Timings.structureTimings = new ConcurrentHashMap<>();
+
+        final RegistryAccess.Frozen registryAccess = server.registryAccess();
+        List<Holder.Reference<Structure>> holders = registryAccess.registryOrThrow(Registries.STRUCTURE).holders().toList();
+        final Registry<Biome> biomeRegistry = registryAccess.registry(Registries.BIOME).get();
+
+        final Registry<StructureSet> structureSetRegistry = registryAccess.registryOrThrow(Registries.STRUCTURE_SET);
+
+        if (CommonConfiguration.config.getCommonConfig().logDuplicatedSalt)
+        {
+            Int2ObjectOpenHashMap<Set<String>> structureSetIds = new Int2ObjectOpenHashMap();
+            for (final Map.Entry<ResourceKey<StructureSet>, StructureSet> entry : structureSetRegistry.entrySet())
+            {
+                final int salt = entry.getValue().placement().salt();
+                structureSetIds.putIfAbsent(salt, new HashSet<>());
+                structureSetIds.get(salt).add(entry.getKey().location().toString());
+            }
+
+            for (final Int2ObjectMap.Entry<Set<String>> entry : structureSetIds.int2ObjectEntrySet())
+            {
+                if (entry.getValue().size() > 1)
+                {
+                    StructureEssentials.LOGGER.warn(
+                        "Non-unique structure_set salt:" + entry.getIntKey() + " potentially creating overlapping structures detected. Structure sets: " + entry.getValue());
+                }
+            }
+        }
 
         if (!CommonConfiguration.config.getCommonConfig().autoBiomeCompat)
         {
             return;
         }
-
-        final RegistryAccess.Frozen registryAccess = server.registryAccess();
-        List<Holder.Reference<Structure>> holders = registryAccess.registryOrThrow(Registries.STRUCTURE).holders().toList();
-        final Registry<Biome> biomeRegistry = registryAccess.registry(Registries.BIOME).get();
 
         final Map<ResourceLocation, TagKey<Biome>> directReplacementTags = new HashMap<>();
         directReplacementTags.put(new ResourceLocation("deep_ocean"), BiomeTags.IS_DEEP_OCEAN);
@@ -88,6 +119,45 @@ public class StructureEssentials implements ModInitializer
         directReplacementTags.put(new ResourceLocation("warped_forest"), ConventionalBiomeTags.NETHER_FORESTS);
         directReplacementTags.put(new ResourceLocation("crimson_forest"), ConventionalBiomeTags.NETHER_FORESTS);
 
+        Set<TagKey<Biome>> DEFINING_TAGS =
+            Set.of(BiomeTags.IS_RIVER,
+                BiomeTags.IS_DEEP_OCEAN,
+                BiomeTags.IS_OCEAN,
+                BiomeTags.IS_BEACH,
+                BiomeTags.IS_BADLANDS,
+                BiomeTags.IS_SAVANNA,
+                BiomeTags.IS_TAIGA,
+                BiomeTags.IS_JUNGLE,
+                BiomeTags.IS_FOREST,
+                BiomeTags.IS_MOUNTAIN,
+                createBiomeTag("forge", "is_cave"),
+                createBiomeTag("forge", "is_plains"),
+                createBiomeTag("forge", "is_desert"),
+                createBiomeTag("forge", "is_snowy"),
+                createBiomeTag("forge", "is_lush"),
+                createBiomeTag("forge", "is_dead"),
+                createBiomeTag("forge", "is_underground"),
+                createBiomeTag("forge", "is_void"),
+                createBiomeTag("forge", "is_sandy"),
+                createBiomeTag("forge", "is_swamp"),
+                createBiomeTag("c", "no_default_monsters"),
+                createBiomeTag("c", "is_void"),
+                createBiomeTag("c", "is_dense_vegetation"),
+                createBiomeTag("c", "is_sparse_vegetation"),
+                createBiomeTag("c", "is_plains"),
+                createBiomeTag("c", "is_windswept"),
+                createBiomeTag("c", "is_shallow_ocean"),
+                createBiomeTag("c", "is_underground"),
+                createBiomeTag("c", "is_cave"),
+                createBiomeTag("c", "is_lush"),
+                createBiomeTag("c", "is_dead"),
+                createBiomeTag("c", "is_sandy"),
+                createBiomeTag("c", "is_snowy"),
+                createBiomeTag("c", "is_icy"),
+                createBiomeTag("c", "is_swamp"),
+                createBiomeTag("c", "is_aquatic")
+            );
+
         for (final Holder.Reference<Structure> holder : holders)
         {
             LinkedHashSet<Holder<Biome>> biomeHolderSet = new LinkedHashSet<>(holder.value().biomes().size());
@@ -96,6 +166,8 @@ public class StructureEssentials implements ModInitializer
 
             float maxDownfall = -1000;
             float minDownfall = 1000;
+
+            Object2IntOpenHashMap<TagKey<Biome>> allowedDefiningTags = new Object2IntOpenHashMap<>();
 
             for (Holder<Biome> biome : holder.value().biomes())
             {
@@ -125,6 +197,34 @@ public class StructureEssentials implements ModInitializer
                 if (downFall > maxDownfall)
                 {
                     maxDownfall = downFall;
+                }
+
+                for (final TagKey<Biome> biomeTagKey : DEFINING_TAGS)
+                {
+                    if (biome.is(biomeTagKey))
+                    {
+                        allowedDefiningTags.put(biomeTagKey, allowedDefiningTags.getOrDefault(biomeTagKey, 0) + 1);
+                    }
+                }
+            }
+
+            Set<TagKey<Biome>> deniedDefiningSet = new HashSet<>();
+
+            for (final TagKey<Biome> biomeTagKey : DEFINING_TAGS)
+            {
+                if (!allowedDefiningTags.containsKey(biomeTagKey))
+                {
+                    deniedDefiningSet.add(biomeTagKey);
+                }
+            }
+
+            Set<TagKey<Biome>> requiredDefiningSet = new HashSet<>();
+
+            for (final var entry : allowedDefiningTags.object2IntEntrySet())
+            {
+                if (entry.getIntValue() == holder.value().biomes().size())
+                {
+                    requiredDefiningSet.add(entry.getKey());
                 }
             }
 
@@ -165,9 +265,21 @@ public class StructureEssentials implements ModInitializer
                 }
             }
 
-            Set<TagKey<Biome>> addedTags = new HashSet<>();
-
+            Set<TagKey<Biome>> addedTags = new HashSet<>(requiredDefiningSet);
+            Set<Holder<Biome>> addedTagBiomes = new HashSet<>();
             Set<Holder<Biome>> toAdd = new HashSet<>();
+
+            for (final TagKey<Biome> biomeTag : requiredDefiningSet)
+            {
+                for (final Holder<Biome> tagBiome : biomeRegistry.getOrCreateTag(biomeTag))
+                {
+                    if (!biomeHolderSet.contains(tagBiome))
+                    {
+                        toAdd.add(tagBiome);
+                    }
+                }
+            }
+
             for (Holder<Biome> biome : biomeHolderSet)
             {
                 final TagKey<Biome> tag = directReplacementTags.get(biomeRegistry.getKey(biome.value()));
@@ -181,86 +293,90 @@ public class StructureEssentials implements ModInitializer
                             continue;
                         }
 
-                        if (tagBiome.value().getGenerationSettings().features().isEmpty())
-                        {
-                            continue;
-                        }
-
-                        float temp = Command.getAdjustedTemp(tagBiome);
-                        final float downFall = tagBiome.value().climateSettings.downfall();
-
-                        if (temp > minTemp && temp < maxTemp && downFall < maxDownfall && downFall > minDownfall)
-                        {
-                            toAdd.add(tagBiome);
-                        }
+                        toAdd.add(tagBiome);
+                        addedTagBiomes.add(tagBiome);
                     }
                     addedTags.add(tag);
                 }
             }
 
+            Object2DoubleOpenHashMap<Holder<Biome>> highScoreBiomes = new Object2DoubleOpenHashMap<>();
             Object2DoubleOpenHashMap<Holder<Biome>> potentialBiomes = new Object2DoubleOpenHashMap<>();
             for (Holder<Biome> biome : biomeHolderSet)
             {
-                final List<Object2IntMap.Entry<Holder<Biome>>> similar = Command.getSimilarBiomesFor(biome, registryAccess);
-                int orgScore = similar.get(0).getIntValue();
+                final List<Object2DoubleMap.Entry<Holder<Biome>>> similar = Command.getSimilarBiomesFor(biome, registryAccess);
 
-                for (int i = 1; i < similar.size() && i < 200; i++)
+                for (int i = 0; i < similar.size() && i < 200; i++)
                 {
-                    final Object2IntMap.Entry<Holder<Biome>> entry = similar.get(i);
-                    if (biomeHolderSet.contains(entry.getKey()) || entry.getKey().value().getGenerationSettings().features().isEmpty()
-                        || entry.getKey().unwrapKey().get() == Biomes.THE_END
-                        || entry.getIntValue() <= 1)
+                    final Object2DoubleMap.Entry<Holder<Biome>> entry = similar.get(i);
+                    if (biomeHolderSet.contains(entry.getKey()))
                     {
                         continue;
                     }
 
-                    double percent = ((double) entry.getIntValue() / orgScore);
+                    double percent = entry.getDoubleValue();
                     double previousValue = potentialBiomes.getOrDefault(entry.getKey(), 0);
-                    percent = (percent * percent) + (percent >= 0.5 * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness && previousValue < 100 ? 100 : 0);
+                    if (percent >= (toAdd.contains(entry.getKey()) ? 0.85 * 0.85 : 0.85) * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness)
+                    {
+                        highScoreBiomes.put(entry.getKey(), percent);
+                    }
+
                     potentialBiomes.put(entry.getKey(), previousValue + percent);
                 }
             }
 
-            if (!potentialBiomes.isEmpty())
+            for (final var entry : potentialBiomes.object2DoubleEntrySet())
             {
-                double similarityThreshold =
-                    100 + ((0.74 * 0.74) + Math.log(biomeHolderSet.size()) * 0.1905) * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness;
-                for (Iterator<Holder<Biome>> iterator = toAdd.iterator(); iterator.hasNext(); )
+                entry.setValue(entry.getDoubleValue() / biomeHolderSet.size());
+            }
+
+            if (highScoreBiomes.isEmpty())
+            {
+                continue;
+            }
+
+            final ArrayList<Object2DoubleMap.Entry<Holder<Biome>>> sortedPotentialBiomes = new ArrayList<>(potentialBiomes.object2DoubleEntrySet());
+            sortedPotentialBiomes.sort(Comparator.comparingDouble(e -> ((Object2DoubleMap.Entry<Holder<Biome>>) e).getDoubleValue()).reversed());
+
+            Object2DoubleMap.Entry<Holder<Biome>> bestSimilarityScore = sortedPotentialBiomes.get(0);
+            if (bestSimilarityScore == null)
+            {
+                continue;
+            }
+
+            toAdd.clear();
+
+            double minSimilarity = bestSimilarityScore.getDoubleValue() * 0.8 * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness;
+            for (final Object2DoubleMap.Entry<Holder<Biome>> scoredBiome : sortedPotentialBiomes)
+            {
+                if (scoredBiome.getDoubleValue() < minSimilarity)
                 {
-                    final var tagAdded = iterator.next();
-                    double score = potentialBiomes.getOrDefault(tagAdded, 0);
-                    if (score < (similarityThreshold - 100) / 1.3)
-                    {
-                        iterator.remove();
-                    }
+                    break;
                 }
 
-                final ArrayList<Object2DoubleMap.Entry<Holder<Biome>>> sortedBiomeHolders = new ArrayList<>(potentialBiomes.object2DoubleEntrySet());
-                sortedBiomeHolders.sort(Comparator.comparingDouble(e -> ((Object2DoubleMap.Entry<Holder<Biome>>) e).getDoubleValue()).reversed());
-
-                for (var sortedBiome : sortedBiomeHolders)
+                if (highScoreBiomes.containsKey(scoredBiome.getKey()))
                 {
-                    if (similarityThreshold < sortedBiome.getDoubleValue())
-                    {
-                        // Check fitting, temp/downfall
-                        float temp = Command.getAdjustedTemp(sortedBiome.getKey());
-                        final float downFall = sortedBiome.getKey().value().climateSettings.downfall();
-                        if (temp > minTemp && temp < maxTemp && downFall < maxDownfall && downFall > minDownfall && !sortedBiome.getKey().toString().contains("small")
-                            && !sortedBiome.getKey().is(BiomeTags.IS_RIVER))
-                        {
-                            toAdd.add(sortedBiome.getKey());
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    toAdd.add(scoredBiome.getKey());
                 }
             }
 
-            for (Iterator<Holder<Biome>> iterator = toAdd.iterator(); iterator.hasNext(); )
+            for (final Iterator<Holder<Biome>> iterator = toAdd.iterator(); iterator.hasNext(); )
             {
                 final var biomeHolder = iterator.next();
+
+                if (!biomeHolder.isBound() || biomeHolder.unwrapKey().isEmpty())
+                {
+                    iterator.remove();
+                    continue;
+                }
+
+                final ResourceKey<Biome> biomeKey = biomeHolder.unwrapKey().get();
+                if (biomeKey == Biomes.THE_END || biomeKey == Biomes.THE_VOID || biomeKey == SMALL_END_ISLANDS)
+                {
+                    iterator.remove();
+                    continue;
+                }
+
                 boolean containedDimension = false;
 
                 for (final Set<Holder<Biome>> dimensionBiomes : allowedDimensions.values())
@@ -275,6 +391,52 @@ public class StructureEssentials implements ModInitializer
                 if (!containedDimension)
                 {
                     iterator.remove();
+                    continue;
+                }
+
+                if (biomeHolder.value().getGenerationSettings().features().isEmpty())
+                {
+                    iterator.remove();
+                    continue;
+                }
+
+                float temp = Command.getAdjustedTemp(biomeHolder);
+                final float downFall = biomeHolder.value().climateSettings.downfall();
+
+                if (!(temp > minTemp && temp < maxTemp && downFall < maxDownfall && downFall > minDownfall))
+                {
+                    iterator.remove();
+                    continue;
+                }
+
+                if (!biomeHolder.tags().anyMatch(tag -> tag.location().getPath().contains("structure")))
+                {
+                    iterator.remove();
+                    continue;
+                }
+
+                boolean shouldRemove = false;
+                for (final TagKey<Biome> biomeTagKey : requiredDefiningSet)
+                {
+                    if (!biomeHolder.is(biomeTagKey) && !addedTagBiomes.contains(biomeHolder))
+                    {
+                        shouldRemove = true;
+                    }
+                }
+
+                if (shouldRemove)
+                {
+                    iterator.remove();
+                    continue;
+                }
+
+                for (final TagKey<Biome> biomeTagKey : deniedDefiningSet)
+                {
+                    if (biomeHolder.is(biomeTagKey))
+                    {
+                        iterator.remove();
+                        break;
+                    }
                 }
             }
 
@@ -289,10 +451,8 @@ public class StructureEssentials implements ModInitializer
 
                 if (CommonConfiguration.config.getCommonConfig().autoBiomeCompatLogging)
                 {
-                    double similarityThreshold =
-                        100 + ((0.74 * 0.74) + Math.log(biomeHolderSet.size()) * 0.1905) * CommonConfiguration.config.getCommonConfig().autoBiomeCompatStrictness;
                     StructureEssentials.LOGGER.warn(
-                        "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (similarityThreshold * 1000)) / 1000.0 + " biomes: "
+                        "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (minSimilarity * 1000)) / 1000.0 + " biomes: "
                             + toAdd.stream()
                             .map(e -> e.unwrapKey().get().location() + ":" + ((int) (potentialBiomes.getOrDefault(e, 0) * 1000)) / 1000.0)
                             .toList());
@@ -308,5 +468,15 @@ public class StructureEssentials implements ModInitializer
         }
 
         Command.biomeScoreCache.clear();
+    }
+
+    public static ResourceLocation createResourcelocation(final String namespace, final String path)
+    {
+        return new ResourceLocation(namespace, path);
+    }
+
+    public static TagKey<Biome> createBiomeTag(final String namespace, final String path)
+    {
+        return TagKey.create(Registries.BIOME, createResourcelocation(namespace, path));
     }
 }

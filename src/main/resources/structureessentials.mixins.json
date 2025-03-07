@@ -15,6 +15,7 @@
     "ModifyStructureSettingsMixin",
     "PlacedFeatureErrorMixin",
     "RandomSpreadStructurePlacementMixin",
+    "StructureMinDistanceDataHolder",
     "StructurePlacementLogging",
     "StructureSearchSpeedupMixin",
     "StructureSearchTimeoutMixin",
