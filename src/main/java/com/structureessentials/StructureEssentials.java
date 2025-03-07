@@ -472,7 +472,7 @@ public class StructureEssentials implements ModInitializer
 
     public static ResourceLocation createResourcelocation(final String namespace, final String path)
     {
-        return new ResourceLocation(namespace, path);
+        return ResourceLocation.fromNamespaceAndPath(namespace, path);
     }
 
     public static TagKey<Biome> createBiomeTag(final String namespace, final String path)
