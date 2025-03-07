@@ -5,8 +5,10 @@ import com.structureessentials.StructureEssentials;
 import com.structureessentials.Timings;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -26,6 +28,8 @@ import net.minecraft.sounds.Music;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.MobSpawnSettings;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
@@ -187,27 +191,42 @@ public class Command
 
                             context.getSource().sendSystemMessage(Component.literal("Similar biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
 
-                            for (int i = 0; i < sortedBiomeHolders.size() && i < 10; i++)
+                            for (int i = 0; i < sortedBiomeHolders.size() && i < 7; i++)
                             {
-
                                 context.getSource()
                                     .sendSystemMessage(Component.literal(
                                         "Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location()));
                             }
 
+                            int count = 0;
                             for (final Map.Entry<TagKey<Biome>, Double> tag : sortedBiomeTagKeys)
                             {
+                                count++;
                                 context.getSource().sendSystemMessage(Component.literal("Weight:" + Math.round(tag.getValue()) + " Tag: #" + tag.getKey().location()));
+                                if (count >= 7)
+                                {
+                                    break;
+                                }
+                            }
+
+                            for (int i = 0; i < sortedBiomeHolders.size(); i++)
+                            {
+                                StructureEssentials.LOGGER.info(
+                                    "Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location());
+                            }
+
+                            for (final Map.Entry<TagKey<Biome>, Double> tag : sortedBiomeTagKeys)
+                            {
+                                StructureEssentials.LOGGER.info("Weight:" + Math.round(tag.getValue()) + " Tag: #" + tag.getKey().location());
                             }
 
                             return 1;
                         })));
     }
 
+    public static Map<Holder<Biome>, List<Object2DoubleMap.Entry<Holder<Biome>>>> biomeScoreCache = new HashMap<>();
 
-    public static Map<Holder<Biome>, List<Object2IntMap.Entry<Holder<Biome>>>> biomeScoreCache = new HashMap<>();
-
-    public static List<Object2IntMap.Entry<Holder<Biome>>> getSimilarBiomesFor(final Holder<Biome> biomeHolder, final RegistryAccess registryAccess)
+    public static List<Object2DoubleMap.Entry<Holder<Biome>>> getSimilarBiomesFor(final Holder<Biome> biomeHolder, final RegistryAccess registryAccess)
     {
         final var result = biomeScoreCache.get(biomeHolder);
         if (result != null)
@@ -215,8 +234,8 @@ public class Command
             return result;
         }
 
-        final List<Holder<Biome>> similarBiomes = new ArrayList<>();
-        final List<TagKey<Biome>> biomeTags = biomeHolder.tags().collect(Collectors.toList());
+        final Set<Holder<Biome>> similarBiomes = new HashSet<>();
+        final Set<TagKey<Biome>> biomeTags = biomeHolder.tags().collect(Collectors.toSet());
 
         for (final Holder<Biome> currentBiome : registryAccess.registry(Registries.BIOME).get().asHolderIdMap())
         {
@@ -229,50 +248,81 @@ public class Command
             }
         }
 
-        Object2IntOpenHashMap<Holder<Biome>> countMap = new Object2IntOpenHashMap<>();
-
+        Object2DoubleOpenHashMap<Holder<Biome>> countMap = new Object2DoubleOpenHashMap<>();
         for (Holder<Biome> similarBiome : similarBiomes)
         {
+            if (similarBiome.equals(biomeHolder))
+            {
+                continue;
+            }
+
+            int matching = 0;
+
             for (TagKey<Biome> similarBiomeTagKey : similarBiome.tags().toList())
             {
                 if (biomeTags.contains(similarBiomeTagKey))
                 {
-                    countMap.put(similarBiome, countMap.getOrDefault(similarBiome, 0) + 2);
-                }
-                else
-                {
-                    countMap.put(similarBiome, countMap.getOrDefault(similarBiome, 0) - 1);
+                    matching++;
                 }
             }
+
+            double matchPct = (double) matching / biomeTags.size();
+            // Limit impact to 30% of tags
+            matchPct = 0.7 + 0.3 * matchPct;
+            countMap.put(similarBiome, matchPct);
         }
 
         final float orgTemperature = getAdjustedTemp(biomeHolder);
         final float downfall = biomeHolder.value().hasPrecipitation() ? biomeHolder.value().getModifiedClimateSettings().downfall() : 0.0f;
+        final Biome.Precipitation orgPrecipitation =
+            !biomeHolder.value().hasPrecipitation() ? Biome.Precipitation.NONE : orgTemperature >= 0.15F ? Biome.Precipitation.RAIN : Biome.Precipitation.SNOW;
         final String orgName = biomeHolder.unwrapKey().get().location().getPath().toString();
         final Optional<Music> orgMusic = biomeHolder.value().getModifiedSpecialEffects().getBackgroundMusic();
         final int orgSkyColor = biomeHolder.value().getModifiedSpecialEffects().getSkyColor();
-        final int orgFeatureCount = biomeHolder.value().getGenerationSettings().features().size();
-        final List<HolderSet<PlacedFeature>> orgFeatures = biomeHolder.value().getGenerationSettings().features();
-
-
-        for (final Object2IntMap.Entry<Holder<Biome>> ratedHolderEntry : countMap.object2IntEntrySet())
+        final Set<Holder<PlacedFeature>> orgFeatures = new HashSet<>();
+        for (final HolderSet<PlacedFeature> featureSet : biomeHolder.value().getGenerationSettings().features())
         {
+            for (final Holder<PlacedFeature> feature : featureSet)
+            {
+                orgFeatures.add(feature);
+            }
+        }
+
+        final List<ConfiguredFeature<?, ?>> orgFlowerFeatures = biomeHolder.value().getGenerationSettings().getFlowerFeatures();
+        final MobSpawnSettings orgMobSettings = biomeHolder.value().getMobSettings();
+
+        for (ObjectIterator<Object2DoubleMap.Entry<Holder<Biome>>> iterator = countMap.object2DoubleEntrySet().iterator(); iterator.hasNext(); )
+        {
+            final Object2DoubleMap.Entry<Holder<Biome>> ratedHolderEntry = iterator.next();
             if (ratedHolderEntry.getKey().equals(biomeHolder))
             {
                 continue;
             }
 
             final Holder<Biome> ratedBiomeHolder = ratedHolderEntry.getKey();
+
             double modifier = 1.0;
-            final float downFallDiff =
-                Math.abs(downfall - (ratedBiomeHolder.value().hasPrecipitation() ? biomeHolder.value().getModifiedClimateSettings().downfall() : 0.0f));
-            modifier *= 1.0 - Math.min(0.2, downFallDiff);
-            final float tempDiff = Math.abs(orgTemperature - getAdjustedTemp(ratedBiomeHolder));
-            modifier *= 1.0 - Math.min(0.5, tempDiff / 2);
+
+            // Downfall 0.0 -> 1.0, indicates biome humidity. Over 0.85 is humid
+            final float temp = getAdjustedTemp(ratedBiomeHolder);
+            final Biome.Precipitation precipitation =
+                !ratedBiomeHolder.value().hasPrecipitation() ? Biome.Precipitation.NONE : temp >= 0.15F ? Biome.Precipitation.RAIN : Biome.Precipitation.SNOW;
+            if (orgPrecipitation != precipitation)
+            {
+                modifier *= 0.7;
+            }
+            else
+            {
+                final float downFallDiff =
+                    Math.abs(downfall - (ratedBiomeHolder.value().hasPrecipitation() ? biomeHolder.value().getModifiedClimateSettings().downfall() : 0.0f));
+                modifier *= (1.0 - (0.1 * downFallDiff));
+                final float tempDiff = Math.abs(orgTemperature - getAdjustedTemp(ratedBiomeHolder));
+                modifier *= (1.0 - Math.min(0.1, tempDiff * 0.1));
+            }
 
             if (ratedBiomeHolder.toString().contains(orgName))
             {
-                modifier *= 1.3;
+                modifier *= 1.2;
             }
 
             if (orgMusic.isPresent())
@@ -292,33 +342,72 @@ public class Command
                 modifier *= 0.9;
             }
 
-            if (orgFeatureCount > 7 && ratedBiomeHolder.value().getGenerationSettings().features().size() <= 2)
+            int matchingFeatures = 0;
+            int totalFeatures = 0;
+            for (final HolderSet<PlacedFeature> featureSet : ratedBiomeHolder.value().getGenerationSettings().features())
             {
-                modifier *= 0.7;
-            }
-            else if (orgFeatureCount > 2 && ratedBiomeHolder.value().getGenerationSettings().features().size() > 2)
-            {
-                int missing = 0;
-
-                final var ratedFeatures = ratedBiomeHolder.value().getGenerationSettings().features().get(ratedBiomeHolder.value().getGenerationSettings().features().size() - 2);
-                for(final Holder<PlacedFeature> feature: orgFeatures.get(orgFeatureCount - 2))
+                for (final Holder<PlacedFeature> feature : featureSet)
                 {
-                    if (!ratedFeatures.contains(feature))
+                    totalFeatures++;
+                    if (orgFeatures.contains(feature))
                     {
-                        missing++;
+                        matchingFeatures++;
+                    }
+                }
+            }
+
+            int missingFeatures = orgFeatures.size() - matchingFeatures;
+            int additionalFeatures = totalFeatures - missingFeatures;
+            modifier *= (1.0 - Math.min(0.1, (0.1 * ((double) (missingFeatures * 3) / Math.max(1, orgFeatures.size())))));
+            modifier *= (1.0 - (0.05 * ((double) additionalFeatures / Math.max(10, orgFeatures.size()))));
+
+            if (!orgFlowerFeatures.isEmpty())
+            {
+                int missingFlowerFeatures = 0;
+                for (final ConfiguredFeature<?, ?> feature : orgFlowerFeatures)
+                {
+                    boolean foundFlowerFeature = false;
+                    for (final var existing : ratedBiomeHolder.value().getGenerationSettings().getFlowerFeatures())
+                    {
+                        if (existing.equals(feature))
+                        {
+                            foundFlowerFeature = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundFlowerFeature)
+                    {
+                        missingFlowerFeatures++;
+                    }
+                }
+                modifier *= (1.0 - (0.1 * ((double) missingFlowerFeatures / orgFlowerFeatures.size())));
+            }
+
+            if (!orgMobSettings.getEntityTypes().isEmpty())
+            {
+                int missingMobs = 0;
+                for (final var type : orgMobSettings.getEntityTypes())
+                {
+                    if (!ratedBiomeHolder.value().getMobSettings().getEntityTypes().contains(type))
+                    {
+                        missingMobs++;
                     }
                 }
 
-                modifier *= 1.0 - (missing * 0.02);
+                modifier *= (1.0 - (0.2 * ((double) missingMobs / orgMobSettings.getEntityTypes().size())));
             }
 
-            ratedHolderEntry.setValue((int) (ratedHolderEntry.getIntValue() * modifier));
+            if (Math.abs(orgMobSettings.getCreatureProbability() - ratedBiomeHolder.value().getMobSettings().getCreatureProbability()) > 0.1)
+            {
+                modifier *= 0.9;
+            }
+
+            ratedHolderEntry.setValue((ratedHolderEntry.getDoubleValue() * modifier));
         }
 
-        final int ownerScore = countMap.removeInt(biomeHolder);
-        final List<Object2IntMap.Entry<Holder<Biome>>> sortedBiomeHolders = new ArrayList<>(countMap.object2IntEntrySet());
-        sortedBiomeHolders.sort(Comparator.comparingInt(e -> ((Object2IntMap.Entry<Holder<Biome>>) e).getIntValue()).reversed());
-        sortedBiomeHolders.addFirst(new CustomEntry(biomeHolder, ownerScore));
+        final List<Object2DoubleMap.Entry<Holder<Biome>>> sortedBiomeHolders = new ArrayList<>(countMap.object2DoubleEntrySet());
+        sortedBiomeHolders.sort(Comparator.comparingDouble(e -> ((Object2DoubleMap.Entry<Holder<Biome>>) e).getDoubleValue()).reversed());
         biomeScoreCache.put(biomeHolder, sortedBiomeHolders);
         return sortedBiomeHolders;
     }
@@ -356,7 +445,7 @@ public class Command
     public static List<Map.Entry<TagKey<Biome>, Double>> getSimilarTagsFor(final Holder<Biome> biomeHolder, final RegistryAccess registryAccess)
     {
         final List<TagKey<Biome>> biomeTags = biomeHolder.tags().collect(Collectors.toList());
-        List<Object2IntMap.Entry<Holder<Biome>>> sortedBiomeHolders = getSimilarBiomesFor(biomeHolder, registryAccess);
+        List<Object2DoubleMap.Entry<Holder<Biome>>> sortedBiomeHolders = getSimilarBiomesFor(biomeHolder, registryAccess);
 
         Map<TagKey<Biome>, Double> tagCountMap = new HashMap<>();
 
@@ -370,7 +459,7 @@ public class Command
                 weight = -(i - biomeCount * (1 / 6d)) / (biomeCount * (5 / 6d));
             }
 
-            Map.Entry<Holder<Biome>, Integer> biomeHolderEntry = sortedBiomeHolders.get(i);
+            Map.Entry<Holder<Biome>, Double> biomeHolderEntry = sortedBiomeHolders.get(i);
 
             for (final TagKey<Biome> biomeHolderEntryTag : biomeHolderEntry.getKey().tags().toList())
             {
