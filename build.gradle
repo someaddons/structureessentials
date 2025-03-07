@@ -103,6 +103,8 @@ dependencies {
 
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
     implementation fg.deobf("curse.maven:cupboard-326652:4669193")
+    //implementation fg.deobf("curse.maven:ecosphere-490686:5004493")
+    implementation fg.deobf("curse.maven:cristellib-856996:5869180")
 }
 
 jar {
