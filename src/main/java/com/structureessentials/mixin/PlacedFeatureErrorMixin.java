@@ -25,17 +25,15 @@ public abstract class PlacedFeatureErrorMixin
     private boolean onPlace(PlacedFeature feature, PlacementContext context, RandomSource randomSource, BlockPos pos)
     {
         final ResourceLocation key = context.getLevel().registryAccess().registry(Registries.PLACED_FEATURE).get().getKey(self);
-        if (key == null)
-        {
-            return placeWithContext(context, randomSource, pos);
-        }
-
         try
         {
             long prev = System.nanoTime();
             boolean result = placeWithContext(context, randomSource, pos);
             prev = (System.nanoTime() - prev) / 10;
-            Timings.featureTimings.put(key, Timings.featureTimings.getOrDefault(key, 0L) + prev);
+            if (key != null)
+            {
+                Timings.featureTimings.put(key, Timings.featureTimings.getOrDefault(key, 0L) + prev);
+            }
             return result;
         }
         catch (Exception e)
@@ -49,18 +47,16 @@ public abstract class PlacedFeatureErrorMixin
     private boolean onPlaceWithBiome(PlacedFeature feature, PlacementContext context, RandomSource randomSource, BlockPos pos)
     {
         final ResourceLocation key = context.getLevel().registryAccess().registry(Registries.PLACED_FEATURE).get().getKey(self);
-        if (key == null)
-        {
-            return placeWithContext(context, randomSource, pos);
-        }
 
         try
         {
             long prev = System.nanoTime();
             boolean result = placeWithContext(context, randomSource, pos);
             prev = (System.nanoTime() - prev) / 10;
-
-            Timings.featureTimings.put(key, Timings.featureTimings.getOrDefault(key, 0L) + prev);
+            if (key != null)
+            {
+                Timings.featureTimings.put(key, Timings.featureTimings.getOrDefault(key, 0L) + prev);
+            }
             return result;
         }
         catch (Exception e)

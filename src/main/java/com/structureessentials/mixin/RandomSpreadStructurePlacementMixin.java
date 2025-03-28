@@ -42,8 +42,8 @@ public class RandomSpreadStructurePlacementMixin
       final RandomSpreadType p_227007_,
       final CallbackInfo ci)
     {
-        spacing = Mth.clamp((int) Math.round(spacing * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 2, 4095);
-        separation = Mth.clamp((int) Math.round(separation * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 1, 4095);
+        spacing = Mth.clamp((int) Math.round(spacing * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 1, 4095);
+        separation = Mth.clamp((int) Math.round(separation * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 0, 4095);
 
         if (spacing <= separation)
         {

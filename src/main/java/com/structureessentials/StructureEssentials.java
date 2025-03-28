@@ -272,7 +272,7 @@ public class StructureEssentials
                     }
                 }
 
-                if (!contained)
+                if (!contained || !CommonConfiguration.config.getCommonConfig().dimensionWhitelist.contains(dimensionBiomes.getKey().dimension().location().toString()))
                 {
                     iterator.remove();
                 }
