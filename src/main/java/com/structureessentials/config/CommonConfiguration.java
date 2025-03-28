@@ -2,29 +2,35 @@ package com.structureessentials.config;
 
 import com.cupboard.config.CupboardConfig;
 import com.cupboard.config.ICommonConfig;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.structureessentials.StructureEssentials;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class CommonConfiguration implements ICommonConfig
 {
-    public static CupboardConfig<CommonConfiguration> config                    = new CupboardConfig<>(StructureEssentials.MODID, new CommonConfiguration());
-    public        boolean                             structurePlacementLogging = false;
-    public int     structureSearchTimeout     = 50;
-    public boolean useFastStructureLookup     = true;
-    public boolean warnMissingRegistryEntry   = true;
-    public boolean disableLegacyRandomCrashes = true;
-    public int     mapSearchRadius            = 40;
-    public int     globalSearchRadius         = 70;
-    public int     locateSearchRadius         = 110;
-    public double  spacingSeparationModifier  = 1.0d;
-    public int     minimumStructureDistance = 32;
-    public boolean minimumStructureDistanceEnabled = false;
-    public boolean minimumStructureDistanceLogging = false;
-    public boolean forceUniqueSalt          = false;
-    public boolean logDuplicatedSalt        = true;
-    public boolean autoBiomeCompat  = true;
-    public boolean autoBiomeCompatLogging  = false;
-    public double  autoBiomeCompatStrictness  = 1.0d;
+    public static CupboardConfig<CommonConfiguration> config                          = new CupboardConfig<>(StructureEssentials.MODID, new CommonConfiguration());
+    public        boolean                             structurePlacementLogging       = false;
+    public        int                                 structureSearchTimeout          = 50;
+    public        boolean                             useFastStructureLookup          = true;
+    public        boolean                             warnMissingRegistryEntry        = true;
+    public        boolean                             disableLegacyRandomCrashes      = true;
+    public        int                                 mapSearchRadius                 = 40;
+    public        int                                 globalSearchRadius              = 70;
+    public        int                                 locateSearchRadius              = 110;
+    public        double                              spacingSeparationModifier       = 1.0d;
+    public        int                                 minimumStructureDistance        = 32;
+    public        boolean                             minimumStructureDistanceEnabled = false;
+    public        boolean                             minimumStructureDistanceLogging = false;
+    public        Set<String>                         dimensionWhitelist              =
+        new HashSet<>(List.of("minecraft:overworld", "minecraft:the_end", "minecraft:the_nether"));
+    public        boolean                             logDuplicatedSalt               = true;
+    public        boolean                             autoBiomeCompat                 = true;
+    public        boolean                             autoBiomeCompatLogging          = false;
+    public        double                              autoBiomeCompatStrictness       = 1.0d;
 
     public CommonConfiguration()
     {
@@ -51,7 +57,8 @@ public class CommonConfiguration implements ICommonConfig
         root.add("useFastStructureLookup", entry3);
 
         final JsonObject entry6 = new JsonObject();
-        entry6.addProperty("desc:", "Specifies the maximum radius map items can search for structures. Lowering this value reduces the time structure searches stall the server but decreases the range in which structures are found. Vanilla: 50, Default: 40");
+        entry6.addProperty("desc:",
+            "Specifies the maximum radius map items can search for structures. Lowering this value reduces the time structure searches stall the server but decreases the range in which structures are found. Vanilla: 50, Default: 40");
         entry6.addProperty("mapSearchRadius", mapSearchRadius);
         root.add("mapSearchRadius", entry6);
 
@@ -61,13 +68,14 @@ public class CommonConfiguration implements ICommonConfig
         root.add("locateSearchRadius", entry8);
 
         final JsonObject entry7 = new JsonObject();
-        entry7.addProperty("desc:", "Sets the global maximum structure search radius. The vanilla locate command uses 100. Lowering this value reduces the time structure searches stall the server but decreases the range in which structures are found. Default: 70");
+        entry7.addProperty("desc:",
+            "Sets the global maximum structure search radius. The vanilla locate command uses 100. Lowering this value reduces the time structure searches stall the server but decreases the range in which structures are found. Default: 70");
         entry7.addProperty("globalSearchRadius", globalSearchRadius);
         root.add("globalSearchRadius", entry7);
 
         final JsonObject entry9 = new JsonObject();
         entry9.addProperty("desc:",
-          "Adjusts the structure spacing (average spawn distance) and separation (minimum spawn distance). Increasing the value makes structures spawn farther apart, while decreasing it makes them spawn closer together. Vanilla Default: 1.0");
+            "Adjusts the structure spacing (average spawn distance) and separation (minimum spawn distance). Increasing the value makes structures spawn farther apart, while decreasing it makes them spawn closer together. Vanilla Default: 1.0");
         entry9.addProperty("spacingSeparationModifier", spacingSeparationModifier);
         root.add("spacingSeparationModifier", entry9);
 
@@ -85,27 +93,35 @@ public class CommonConfiguration implements ICommonConfig
         entry15.addProperty("logOverlaps", minimumStructureDistanceLogging);
         root.add("minimumStructureDistance", entry15);
 
-        final JsonObject entry10 = new JsonObject();
-        entry10.addProperty("desc:",
-          "Automatically analyzes present biomes and adjust structure spawning to include fitting ones. Default: true");
-        entry10.addProperty("autoBiomeCompat", autoBiomeCompat);
-        root.add("autoBiomeCompat", entry10);
+        final JsonObject entry17 = new JsonObject();
+        entry17.addProperty("desc:",
+            "Automatically analyzes present biomes and adjust structure spawning to include fitting ones. Default: true");
+        entry17.addProperty("enabled", autoBiomeCompat);
+        entry17.addProperty("enableLogging", autoBiomeCompatLogging);
 
-        final JsonObject entry11 = new JsonObject();
-        entry11.addProperty("desc:",
-          "Enables logging for the autoBiomeCompat feature. Default: false");
-        entry11.addProperty("autoBiomeCompatLogging", autoBiomeCompatLogging);
-        root.add("autoBiomeCompatLogging", entry11);
+        final JsonObject strictnessSetting = new JsonObject();
+        strictnessSetting.addProperty("desc:",
+            "Sets a modifier for how strict the autoBiomeCompat is, lower allows adding less similar biomes to be added. E.g. 0.5 decreases the similarity requirements by 50% . Default: 1.0");
+        strictnessSetting.addProperty("autoBiomeCompatStrictness", autoBiomeCompatStrictness);
+        entry17.add("strictness", strictnessSetting);
 
-        final JsonObject entry12 = new JsonObject();
-        entry12.addProperty("desc:",
-          "Sets a modifier for how strict the autoBiomeCompat is, lower allows adding less similar biomes to be added. E.g. 0.5 decreases the similarity requirements by 50% . Default: 1.0");
-        entry12.addProperty("autoBiomeCompatStrictness", autoBiomeCompatStrictness);
-        root.add("autoBiomeCompatStrictness", entry12);
+        final JsonObject whitelist = new JsonObject();
+        whitelist.addProperty("desc:",
+            "List of allowed dimensions for automatic structure compat, by default only vanilla dimensions");
+
+        JsonArray dimensions = new JsonArray();
+        for (final String dimension : dimensionWhitelist)
+        {
+            dimensions.add(dimension);
+        }
+        whitelist.add("dimensions", dimensions);
+        entry17.add("dimensionWhitelist", whitelist);
+
+        root.add("autoBiomeCompat", entry17);
 
         final JsonObject entry4 = new JsonObject();
         entry4.addProperty("desc:",
-          "Prevents crashes due to missing registry entries (e.g., changes in mod structure IDs) by converting them into log error messages instead. Default: true");
+            "Prevents crashes due to missing registry entries (e.g., changes in mod structure IDs) by converting them into log error messages instead. Default: true");
         entry4.addProperty("warnMissingRegistryEntry", warnMissingRegistryEntry);
         root.add("warnMissingRegistryEntry", entry4);
 
@@ -114,7 +130,6 @@ public class CommonConfiguration implements ICommonConfig
         entry5.addProperty("disableLegacyRandomCrashes", disableLegacyRandomCrashes);
         root.add("disableLegacyRandomCrashes", entry5);
 
-        //TODO: feature idea: Structure set jsons generator to have distances inbetween structures? does also require disabling existing structure set though
         //TODO: generate datapack automatically from structure biome compat for manual adjustments
         return root;
     }
@@ -130,12 +145,20 @@ public class CommonConfiguration implements ICommonConfig
         globalSearchRadius = data.get("globalSearchRadius").getAsJsonObject().get("globalSearchRadius").getAsInt();
         locateSearchRadius = data.get("locateSearchRadius").getAsJsonObject().get("locateSearchRadius").getAsInt();
         spacingSeparationModifier = data.get("spacingSeparationModifier").getAsJsonObject().get("spacingSeparationModifier").getAsDouble();
-        autoBiomeCompat = data.get("autoBiomeCompat").getAsJsonObject().get("autoBiomeCompat").getAsBoolean();
-        autoBiomeCompatLogging = data.get("autoBiomeCompatLogging").getAsJsonObject().get("autoBiomeCompatLogging").getAsBoolean();
-        autoBiomeCompatStrictness = data.get("autoBiomeCompatStrictness").getAsJsonObject().get("autoBiomeCompatStrictness").getAsDouble();
         minimumStructureDistance = Math.min(512, Math.max(16, data.get("minimumStructureDistance").getAsJsonObject().get("minimumStructureDistance").getAsInt()));
         minimumStructureDistanceEnabled = data.get("minimumStructureDistance").getAsJsonObject().get("enabled").getAsBoolean();
         minimumStructureDistanceLogging = data.get("minimumStructureDistance").getAsJsonObject().get("logOverlaps").getAsBoolean();
         logDuplicatedSalt = data.get("logDuplicatedSalt").getAsJsonObject().get("logDuplicatedSalt").getAsBoolean();
+        autoBiomeCompat = data.get("autoBiomeCompat").getAsJsonObject().get("enabled").getAsBoolean();
+        autoBiomeCompatLogging = data.get("autoBiomeCompat").getAsJsonObject().get("enableLogging").getAsBoolean();
+        autoBiomeCompatStrictness = data.get("autoBiomeCompat").getAsJsonObject().get("strictness").getAsJsonObject().get("autoBiomeCompatStrictness").getAsDouble();
+        dimensionWhitelist = new HashSet<>();
+        data.get("autoBiomeCompat")
+            .getAsJsonObject()
+            .get("dimensionWhitelist")
+            .getAsJsonObject()
+            .get("dimensions")
+            .getAsJsonArray()
+            .forEach(e -> dimensionWhitelist.add(e.getAsString()));
     }
 }
