@@ -28,9 +28,9 @@ public class CommonConfiguration implements ICommonConfig
     public        Set<String>                         dimensionWhitelist              =
         new HashSet<>(List.of("minecraft:overworld", "minecraft:the_end", "minecraft:the_nether"));
     public        boolean                             logDuplicatedSalt               = true;
-    public        boolean                             autoBiomeCompat                 = true;
-    public        boolean                             autoBiomeCompatLogging          = false;
-    public        double                              autoBiomeCompatStrictness       = 1.0d;
+    public boolean autoBiomeCompat           = false;
+    public boolean autoBiomeCompatLogging    = true;
+    public double  autoBiomeCompatStrictness = 1.2d;
 
     public CommonConfiguration()
     {
@@ -95,13 +95,13 @@ public class CommonConfiguration implements ICommonConfig
 
         final JsonObject entry17 = new JsonObject();
         entry17.addProperty("desc:",
-            "Automatically analyzes present biomes and adjust structure spawning to include fitting ones. Default: true");
-        entry17.addProperty("enabled", autoBiomeCompat);
+            "Automatically analyzes present biomes and adjust structure spawning to include fitting ones, Note that this may also spawn structures in undesired biomes, check the logging and adjust the strictness up/down to achieve a good result. Default: false");
+        entry17.addProperty("enableBiomeCompat", autoBiomeCompat);
         entry17.addProperty("enableLogging", autoBiomeCompatLogging);
 
         final JsonObject strictnessSetting = new JsonObject();
         strictnessSetting.addProperty("desc:",
-            "Sets a modifier for how strict the autoBiomeCompat is, lower allows adding less similar biomes to be added. E.g. 0.5 decreases the similarity requirements by 50% . Default: 1.0");
+            "Sets a modifier for how strict the autoBiomeCompat is, lower allows adding less similar biomes to be added. E.g. 0.5 decreases the similarity requirements by 50% . Default: 1.2");
         strictnessSetting.addProperty("autoBiomeCompatStrictness", autoBiomeCompatStrictness);
         entry17.add("strictness", strictnessSetting);
 
@@ -149,7 +149,7 @@ public class CommonConfiguration implements ICommonConfig
         minimumStructureDistanceEnabled = data.get("minimumStructureDistance").getAsJsonObject().get("enabled").getAsBoolean();
         minimumStructureDistanceLogging = data.get("minimumStructureDistance").getAsJsonObject().get("logOverlaps").getAsBoolean();
         logDuplicatedSalt = data.get("logDuplicatedSalt").getAsJsonObject().get("logDuplicatedSalt").getAsBoolean();
-        autoBiomeCompat = data.get("autoBiomeCompat").getAsJsonObject().get("enabled").getAsBoolean();
+        autoBiomeCompat = data.get("autoBiomeCompat").getAsJsonObject().get("enableBiomeCompat").getAsBoolean();
         autoBiomeCompatLogging = data.get("autoBiomeCompat").getAsJsonObject().get("enableLogging").getAsBoolean();
         autoBiomeCompatStrictness = data.get("autoBiomeCompat").getAsJsonObject().get("strictness").getAsJsonObject().get("autoBiomeCompatStrictness").getAsDouble();
         dimensionWhitelist = new HashSet<>();
