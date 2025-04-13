@@ -30,7 +30,7 @@ public class CommonConfiguration implements ICommonConfig
     public        boolean                             logDuplicatedSalt               = true;
     public boolean autoBiomeCompat        = false;
     public boolean autoBiomeCompatLogging = true;
-    public        double                              autoBiomeCompatStrictness       = 1.0d;
+    public double autoBiomeCompatStrictness = 1.2d;
 
     public CommonConfiguration()
     {
@@ -101,7 +101,7 @@ public class CommonConfiguration implements ICommonConfig
 
         final JsonObject strictnessSetting = new JsonObject();
         strictnessSetting.addProperty("desc:",
-            "Sets a modifier for how strict the autoBiomeCompat is, lower allows adding less similar biomes to be added. E.g. 0.5 decreases the similarity requirements by 50% . Default: 1.0");
+            "Sets a modifier for how strict the autoBiomeCompat is, lower allows adding less similar biomes to be added. E.g. 0.5 decreases the similarity requirements by 50% . Default: 1.2");
         strictnessSetting.addProperty("autoBiomeCompatStrictness", autoBiomeCompatStrictness);
         entry17.add("strictness", strictnessSetting);
 
