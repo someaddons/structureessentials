@@ -71,6 +71,17 @@ public abstract class StructureStartMinDistMixin
         final int xzOffset = 3000000 * distance;
         final int yOffset = this.getModifiedStructureSettings().step() == GenerationStep.Decoration.SURFACE_STRUCTURES ? 2000 : 500;
 
+        final String name;
+        ResourceLocation regID = registryAccess.registry(Registries.STRUCTURE).get().getKey((Structure) (Object) this);
+        if (regID != null)
+        {
+            name = regID.toString();
+        }
+        else
+        {
+            name = "unknown:" + this;
+        }
+
         for (final var piece : cir.getReturnValue().getPieces())
         {
             final BlockPos center = piece.getLocatorPosition();
@@ -87,35 +98,24 @@ public abstract class StructureStartMinDistMixin
                         (pos.getY() + yOffset) / distance,
                         (pos.getZ() + xzOffset) / distance));
 
-                    if (nearby != null)
+                    if (nearby != null && !nearby.equals(name))
                     {
                         break;
                     }
                 }
             }
 
-            if (nearby != null)
+            if (nearby != null && !nearby.equals(name))
             {
                 if (CommonConfiguration.config.getCommonConfig().minimumStructureDistanceLogging)
                 {
                     StructureEssentials.LOGGER.warn(
-                        "Prevented structure overlap for: " + registryAccess.registry(Registries.STRUCTURE).get().getKey((Structure) (Object) this) + " at: " + center +
+                        "Prevented structure overlap for: " + name + " at: " + center +
                             " existing structure: " + nearby);
                 }
                 cir.setReturnValue(StructureStart.INVALID_START);
                 return;
             }
-        }
-
-        final String name;
-        ResourceLocation regID = registryAccess.registry(Registries.STRUCTURE).get().getKey((Structure) (Object) this);
-        if (regID != null)
-        {
-            name = regID.toString();
-        }
-        else
-        {
-            name = "unknown:" + this;
         }
 
         for (final var piece : cir.getReturnValue().getPieces())
