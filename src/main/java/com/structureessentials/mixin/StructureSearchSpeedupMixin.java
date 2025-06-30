@@ -1,10 +1,14 @@
 package com.structureessentials.mixin;
 
 import com.mojang.datafixers.util.Pair;
+import com.structureessentials.IGeneratorNearbyStructureHolder;
 import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -62,6 +66,26 @@ public class StructureSearchSpeedupMixin
                 {
                     if (structureHolder.value().biomes().contains(holder))
                     {
+                        if (((ServerLevel) level).getChunkSource().getGenerator() instanceof IGeneratorNearbyStructureHolder nearbyStructureHolder)
+                        {
+                            final String name;
+                            ResourceLocation regID = level.registryAccess().registry(Registries.STRUCTURE).get().getKey(structureHolder.value());
+                            if (regID != null)
+                            {
+                                name = regID.toString();
+                            }
+                            else
+                            {
+                                name = "unknown:" + structureHolder.value();
+                            }
+
+                            final String existing = nearbyStructureHolder.getNearby(SectionPos.asLong(pos.x, yBlock >> 4, pos.z));
+                            if (existing != null && !existing.equals(name))
+                            {
+                                continue;
+                            }
+                        }
+
                         found = true;
                         break outer;
                     }
