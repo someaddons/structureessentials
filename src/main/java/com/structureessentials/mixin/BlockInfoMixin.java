@@ -21,10 +21,10 @@ public class BlockInfoMixin
     {
         if (state.is(Blocks.JIGSAW) && nbt != null && nbt.contains("final_state"))
         {
-            String s = nbt.getString("final_state");
+            String s = nbt.getString("final_state").get();
             try
             {
-                BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(), s, true);
+                BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK, s, true);
             }
             catch (CommandSyntaxException commandsyntaxexception)
             {

@@ -1,5 +1,7 @@
 package com.structureessentials;
 
+import com.cupboard.util.RegistryLookup;
+import com.cupboard.util.ResourceLocation;
 import com.structureessentials.command.Command;
 import com.structureessentials.config.CommonConfiguration;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -13,7 +15,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BiomeTags;
@@ -72,10 +73,10 @@ public class StructureEssentials
         Timings.structureTimings = new ConcurrentHashMap<>();
 
         final RegistryAccess.Frozen registryAccess = server.registryAccess();
-        List<Holder.Reference<Structure>> holders = registryAccess.registryOrThrow(Registries.STRUCTURE).holders().toList();
-        final Registry<Biome> biomeRegistry = registryAccess.registry(Registries.BIOME).get();
+        List<Holder<Structure>> holders = RegistryLookup.getHolders(registryAccess,Registries.STRUCTURE);
+        final Registry<Biome> biomeRegistry = RegistryLookup.getRegistry(registryAccess,Registries.BIOME);
 
-        final Registry<StructureSet> structureSetRegistry = registryAccess.registryOrThrow(Registries.STRUCTURE_SET);
+        final Registry<StructureSet> structureSetRegistry = RegistryLookup.getRegistry(registryAccess,Registries.STRUCTURE_SET);
 
         if (CommonConfiguration.config.getCommonConfig().logDuplicatedSalt)
         {
@@ -84,7 +85,7 @@ public class StructureEssentials
             {
                 final int salt = entry.getValue().placement().salt();
                 structureSetIds.putIfAbsent(salt, new HashSet<>());
-                structureSetIds.get(salt).add(entry.getKey().location().toString());
+                structureSetIds.get(salt).add(entry.getKey().identifier().toString());
             }
 
             for (final Int2ObjectMap.Entry<Set<String>> entry : structureSetIds.int2ObjectEntrySet())
@@ -171,7 +172,7 @@ public class StructureEssentials
                 createBiomeTag("c", "is_aquatic")
             );
 
-        for (final Holder.Reference<Structure> holder : holders)
+        for (final Holder<Structure> holder : holders)
         {
             LinkedHashSet<Holder<Biome>> biomeHolderSet = new LinkedHashSet<>(holder.value().biomes().size());
             float minTemp = 1000;
@@ -272,7 +273,7 @@ public class StructureEssentials
                     }
                 }
 
-                if (!contained || !CommonConfiguration.config.getCommonConfig().dimensionWhitelist.contains(dimensionBiomes.getKey().dimension().location().toString()))
+                if (!contained || !CommonConfiguration.config.getCommonConfig().dimensionWhitelist.contains(dimensionBiomes.getKey().dimension().identifier().toString()))
                 {
                     iterator.remove();
                 }
@@ -284,7 +285,7 @@ public class StructureEssentials
 
             for (final TagKey<Biome> biomeTag : requiredDefiningSet)
             {
-                for (final Holder<Biome> tagBiome : biomeRegistry.getOrCreateTag(biomeTag))
+                for (final Holder<Biome> tagBiome : RegistryLookup.getHolders(registryAccess, Registries.BIOME,biomeTag))
                 {
                     if (!biomeHolderSet.contains(tagBiome))
                     {
@@ -299,7 +300,7 @@ public class StructureEssentials
                 // Check tag and if applicable add all its values
                 if (tag != null && !addedTags.contains(tag) && biome.is(tag))
                 {
-                    for (final Holder<Biome> tagBiome : biomeRegistry.getOrCreateTag(tag))
+                    for (final Holder<Biome> tagBiome : RegistryLookup.getHolders(registryAccess, Registries.BIOME,tag))
                     {
                         if (biomeHolderSet.contains(tagBiome))
                         {
@@ -465,9 +466,9 @@ public class StructureEssentials
                 if (CommonConfiguration.config.getCommonConfig().autoBiomeCompatLogging)
                 {
                     StructureEssentials.LOGGER.warn(
-                        "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (minSimilarity * 1000)) / 1000.0 + " biomes: "
+                        "Adding Biomes to structure: " + holder.unwrapKey().get().identifier() + " tag:" + tagName + " mins:" + ((int) (minSimilarity * 1000)) / 1000.0 + " biomes: "
                             + toAdd.stream()
-                            .map(e -> e.unwrapKey().get().location() + ":" + ((int) (potentialBiomes.getOrDefault(e, 0) * 1000)) / 1000.0)
+                            .map(e -> e.unwrapKey().get().identifier() + ":" + ((int) (potentialBiomes.getOrDefault(e, 0) * 1000)) / 1000.0)
                             .toList());
                 }
 

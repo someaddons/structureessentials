@@ -1,5 +1,7 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
+import com.cupboard.util.ResourceLocation;
 import com.structureessentials.IGeneratorNearbyStructureHolder;
 import com.structureessentials.StructureEssentials;
 import com.structureessentials.config.CommonConfiguration;
@@ -7,8 +9,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
@@ -38,16 +41,18 @@ public abstract class StructureStartMinDistMixin
     @Inject(method = "generate", at = @At(value = "RETURN"), cancellable = true)
     private void checkOtherStructuresNearby
         (
+            final Holder<Structure> selected,
+            final ResourceKey<Level> dimension,
             final RegistryAccess registryAccess,
-            final ChunkGenerator generator,
+            final ChunkGenerator chunkGenerator,
             final BiomeSource biomeSource,
-            final RandomState p_226600_,
-            final StructureTemplateManager p_226601_,
-            final long p_226602_,
-            final ChunkPos p_226603_,
-            final int p_226604_,
-            final LevelHeightAccessor p_226605_,
-            final Predicate<Holder<Biome>> p_226606_,
+            final RandomState randomState,
+            final StructureTemplateManager structureTemplateManager,
+            final long seed,
+            final ChunkPos sourceChunkPos,
+            final int references,
+            final LevelHeightAccessor heightAccessor,
+            final Predicate<Holder<Biome>> validBiome,
             final CallbackInfoReturnable<StructureStart> cir
         )
     {
@@ -56,23 +61,23 @@ public abstract class StructureStartMinDistMixin
             return;
         }
 
-        if (!(generator instanceof IGeneratorNearbyStructureHolder))
+        if (!(chunkGenerator instanceof IGeneratorNearbyStructureHolder))
         {
             if (CommonConfiguration.config.getCommonConfig().minimumStructureDistanceLogging)
             {
-                StructureEssentials.LOGGER.warn("Skipping structure minimum distance check, invalid generator: " + generator);
+                StructureEssentials.LOGGER.warn("Skipping structure minimum distance check, invalid generator: " + chunkGenerator);
             }
             return;
         }
 
-        final IGeneratorNearbyStructureHolder nearbyStructureHolder = (IGeneratorNearbyStructureHolder) generator;
+        final IGeneratorNearbyStructureHolder nearbyStructureHolder = (IGeneratorNearbyStructureHolder) chunkGenerator;
 
         final int distance = CommonConfiguration.config.getCommonConfig().minimumStructureDistance;
         final int xzOffset = 3000000 * distance;
         final int yOffset = this.getModifiedStructureSettings().step() == GenerationStep.Decoration.SURFACE_STRUCTURES ? 2000 : 500;
 
         final String name;
-        ResourceLocation regID = registryAccess.registry(Registries.STRUCTURE).get().getKey((Structure) (Object) this);
+        ResourceLocation regID = RegistryLookup.getID(registryAccess,Registries.STRUCTURE,this);
         if (regID != null)
         {
             name = regID.toString();

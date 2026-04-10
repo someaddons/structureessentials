@@ -1,11 +1,14 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
+import com.cupboard.util.ResourceLocation;
 import com.structureessentials.Timings;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
@@ -33,16 +36,18 @@ public class StructureTimingMixin
 
     @Inject(method = "generate", at = @At("HEAD"))
     private void beforeGenerate(
-        final RegistryAccess p_226597_,
-        final ChunkGenerator p_226598_,
-        final BiomeSource p_226599_,
-        final RandomState p_226600_,
-        final StructureTemplateManager p_226601_,
-        final long p_226602_,
-        final ChunkPos p_226603_,
-        final int p_226604_,
-        final LevelHeightAccessor p_226605_,
-        final Predicate<Holder<Biome>> p_226606_,
+        final Holder<Structure> selected,
+        final ResourceKey<Level> dimension,
+        final RegistryAccess registryAccess,
+        final ChunkGenerator chunkGenerator,
+        final BiomeSource biomeSource,
+        final RandomState randomState,
+        final StructureTemplateManager structureTemplateManager,
+        final long seed,
+        final ChunkPos sourceChunkPos,
+        final int references,
+        final LevelHeightAccessor heightAccessor,
+        final Predicate<Holder<Biome>> validBiome,
         final CallbackInfoReturnable<StructureStart> cir)
     {
         time = System.nanoTime();
@@ -50,23 +55,25 @@ public class StructureTimingMixin
 
     @Inject(method = "generate", at = @At("RETURN"))
     private void afterGenerate(
+        final Holder<Structure> selected,
+        final ResourceKey<Level> dimension,
         final RegistryAccess registryAccess,
-        final ChunkGenerator p_226598_,
-        final BiomeSource p_226599_,
-        final RandomState p_226600_,
-        final StructureTemplateManager p_226601_,
-        final long p_226602_,
-        final ChunkPos p_226603_,
-        final int p_226604_,
-        final LevelHeightAccessor p_226605_,
-        final Predicate<Holder<Biome>> p_226606_,
+        final ChunkGenerator chunkGenerator,
+        final BiomeSource biomeSource,
+        final RandomState randomState,
+        final StructureTemplateManager structureTemplateManager,
+        final long seed,
+        final ChunkPos sourceChunkPos,
+        final int references,
+        final LevelHeightAccessor heightAccessor,
+        final Predicate<Holder<Biome>> validBiome,
         final CallbackInfoReturnable<StructureStart> cir)
     {
         final long time = (System.nanoTime() - this.time) / 10;
 
         if (id == null)
         {
-            id = registryAccess.registry(Registries.STRUCTURE).get().getKey((Structure) (Object) this);
+            id = RegistryLookup.getID(registryAccess, Registries.STRUCTURE, this);
         }
 
         if (id != null)
