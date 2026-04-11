@@ -1,5 +1,6 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
 import com.structureessentials.StructureEssentials;
 import com.structureessentials.Timings;
 import net.minecraft.core.BlockPos;
@@ -24,7 +25,7 @@ public abstract class PlacedFeatureErrorMixin
     @Redirect(method = "place", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/placement/PlacedFeature;placeWithContext(Lnet/minecraft/world/level/levelgen/placement/PlacementContext;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"))
     private boolean onPlace(PlacedFeature feature, PlacementContext context, RandomSource randomSource, BlockPos pos)
     {
-        final ResourceLocation key = context.getLevel().registryAccess().registry(Registries.PLACED_FEATURE).get().getKey(self);
+        final ResourceLocation key = RegistryLookup.getID(context.getLevel(), Registries.PLACED_FEATURE, self);
         try
         {
             long prev = System.nanoTime();
@@ -46,7 +47,7 @@ public abstract class PlacedFeatureErrorMixin
     @Redirect(method = "placeWithBiomeCheck", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/placement/PlacedFeature;placeWithContext(Lnet/minecraft/world/level/levelgen/placement/PlacementContext;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"))
     private boolean onPlaceWithBiome(PlacedFeature feature, PlacementContext context, RandomSource randomSource, BlockPos pos)
     {
-        final ResourceLocation key = context.getLevel().registryAccess().registry(Registries.PLACED_FEATURE).get().getKey(self);
+        final ResourceLocation key = RegistryLookup.getID(context.getLevel(), (Registries.PLACED_FEATURE), self);
 
         try
         {

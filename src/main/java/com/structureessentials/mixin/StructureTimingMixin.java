@@ -1,5 +1,6 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
 import com.structureessentials.Timings;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
@@ -66,7 +67,7 @@ public class StructureTimingMixin
 
         if (id == null)
         {
-            id = registryAccess.registry(Registries.STRUCTURE).get().getKey((Structure) (Object) this);
+            id = RegistryLookup.getID(registryAccess, Registries.STRUCTURE, this);
         }
 
         if (id != null)

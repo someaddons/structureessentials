@@ -1,5 +1,6 @@
 package com.structureessentials.command;
 
+import com.cupboard.util.RegistryLookup;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.structureessentials.StructureEssentials;
 import com.structureessentials.Timings;
@@ -51,7 +52,7 @@ public class Command
                             final ResourceKey<Biome>
                                 biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
                             List<TagKey<Biome>> biomeTags =
-                                context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
+                                RegistryLookup.getHolder(context.getSource().registryAccess(), Registries.BIOME, biome).tags().toList();
 
                             context.getSource().sendSystemMessage(Component.literal("Biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
                             for (final TagKey<Biome> biomeTag : biomeTags)
@@ -152,8 +153,8 @@ public class Command
                             world.structureManager().fillStartsForStructure(structureEntry.getKey(), structureEntry.getValue(),
                                 structureStart ->
                                 {
-                                    structurePositions.put(structureStart.getBoundingBox().getCenter(), context.getSource().registryAccess().registry(Registries.STRUCTURE).get()
-                                        .getKey(structureEntry.getKey()).toString());
+                                    structurePositions.put(structureStart.getBoundingBox().getCenter(),
+                                        RegistryLookup.getID(context.getSource().registryAccess(), Registries.STRUCTURE, structureEntry.getKey()).toString());
                                 }
                             );
                         }
@@ -184,7 +185,7 @@ public class Command
                             final ResourceKey<Biome>
                                 biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
 
-                            final Holder<Biome> holder = context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get();
+                            final Holder<Biome> holder = RegistryLookup.getHolder(context.getSource().registryAccess(), Registries.BIOME, biome);
 
                             var sortedBiomeHolders = getSimilarBiomesFor(holder, context.getSource().registryAccess());
                             var sortedBiomeTagKeys = getSimilarTagsFor(holder, context.getSource().registryAccess());

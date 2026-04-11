@@ -1,5 +1,6 @@
 package com.structureessentials;
 
+import com.cupboard.util.RegistryLookup;
 import com.structureessentials.command.Command;
 import com.structureessentials.config.CommonConfiguration;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -70,7 +71,7 @@ public class StructureEssentials
         Timings.structureTimings = new ConcurrentHashMap<>();
 
         final RegistryAccess.Frozen registryAccess = server.registryAccess();
-        List<Holder.Reference<Structure>> holders = registryAccess.registryOrThrow(Registries.STRUCTURE).holders().toList();
+        List<Holder<Structure>> holders = RegistryLookup.getHolders(registryAccess, Registries.STRUCTURE);
         final Registry<Biome> biomeRegistry = registryAccess.registry(Registries.BIOME).get();
 
         final Registry<StructureSet> structureSetRegistry = registryAccess.registryOrThrow(Registries.STRUCTURE_SET);
@@ -160,7 +161,7 @@ public class StructureEssentials
                 createBiomeTag("c", "is_aquatic")
             );
 
-        for (final Holder.Reference<Structure> holder : holders)
+        for (final Holder<Structure> holder : holders)
         {
             LinkedHashSet<Holder<Biome>> biomeHolderSet = new LinkedHashSet<>(holder.value().biomes().size());
             float minTemp = 1000;
@@ -454,7 +455,7 @@ public class StructureEssentials
                 if (CommonConfiguration.config.getCommonConfig().autoBiomeCompatLogging)
                 {
                     StructureEssentials.LOGGER.warn(
-                        "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (minSimilarity * 1000)) / 1000.0 + " biomes: "
+                        "Adding Biomes to structure: " + holder.unwrapKey().get().location() + " tag:" + tagName + " mins:" + ((int) (minSimilarity * 1000)) / 1000.0 + " biomes: "
                             + toAdd.stream()
                             .map(e -> e.unwrapKey().get().location() + ":" + ((int) (potentialBiomes.getOrDefault(e, 0) * 1000)) / 1000.0)
                             .toList());

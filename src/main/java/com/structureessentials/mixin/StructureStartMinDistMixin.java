@@ -1,5 +1,6 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
 import com.structureessentials.IGeneratorNearbyStructureHolder;
 import com.structureessentials.StructureEssentials;
 import com.structureessentials.config.CommonConfiguration;
@@ -72,7 +73,7 @@ public abstract class StructureStartMinDistMixin
         final int yOffset = this.getModifiedStructureSettings().step() == GenerationStep.Decoration.SURFACE_STRUCTURES ? 2000 : 500;
 
         final String name;
-        ResourceLocation regID = registryAccess.registry(Registries.STRUCTURE).get().getKey((Structure) (Object) this);
+        ResourceLocation regID = RegistryLookup.getID(registryAccess, Registries.STRUCTURE, this);
         if (regID != null)
         {
             name = regID.toString();

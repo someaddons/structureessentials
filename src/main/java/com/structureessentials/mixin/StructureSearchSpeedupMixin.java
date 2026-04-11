@@ -1,5 +1,6 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
 import com.mojang.datafixers.util.Pair;
 import com.structureessentials.IGeneratorNearbyStructureHolder;
 import com.structureessentials.config.CommonConfiguration;
@@ -69,7 +70,7 @@ public class StructureSearchSpeedupMixin
                         if (((ServerLevel) level).getChunkSource().getGenerator() instanceof IGeneratorNearbyStructureHolder nearbyStructureHolder)
                         {
                             final String name;
-                            ResourceLocation regID = level.registryAccess().registry(Registries.STRUCTURE).get().getKey(structureHolder.value());
+                            ResourceLocation regID = RegistryLookup.getID(level, Registries.STRUCTURE, structureHolder.value());
                             if (regID != null)
                             {
                                 name = regID.toString();
