@@ -29,9 +29,9 @@
 
   "depends": {
     "fabricloader": ">=0.11.3",
-    "fabric": "*",
-    "cupboard": "*",
-    "minecraft": "1.21.x",
+    "fabric-api": "*",
+    "cupboard": ">=3.7",
+    "minecraft": "26.x",
     "java": ">=21"
   },
   "suggests": {

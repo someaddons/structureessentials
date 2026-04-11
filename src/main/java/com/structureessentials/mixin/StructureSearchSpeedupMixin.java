@@ -1,5 +1,6 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
 import com.mojang.datafixers.util.Pair;
 import com.structureessentials.IGeneratorNearbyStructureHolder;
 import com.structureessentials.config.CommonConfiguration;
@@ -8,7 +9,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -44,7 +45,7 @@ public class StructureSearchSpeedupMixin
 
         boolean found = false;
 
-        int[] yLevels = Mth.outFromOrigin(65, level.getMinBuildHeight() + 1, level.getMaxBuildHeight(), 64).toArray();
+        int[] yLevels = Mth.outFromOrigin(65, level.getMinY() + 1, level.getMaxY(), 64).toArray();
 
         final BlockPos worldPos = pos.getWorldPosition();
 
@@ -69,7 +70,7 @@ public class StructureSearchSpeedupMixin
                         if (((ServerLevel) level).getChunkSource().getGenerator() instanceof IGeneratorNearbyStructureHolder nearbyStructureHolder)
                         {
                             final String name;
-                            ResourceLocation regID = level.registryAccess().registry(Registries.STRUCTURE).get().getKey(structureHolder.value());
+                            Identifier regID = RegistryLookup.getID(level, Registries.STRUCTURE, structureHolder.value());
                             if (regID != null)
                             {
                                 name = regID.toString();
@@ -79,7 +80,7 @@ public class StructureSearchSpeedupMixin
                                 name = "unknown:" + structureHolder.value();
                             }
 
-                            final String existing = nearbyStructureHolder.getNearby(SectionPos.asLong(pos.x, yBlock >> 4, pos.z));
+                            final String existing = nearbyStructureHolder.getNearby(SectionPos.asLong(pos.x(), yBlock >> 4, pos.z()));
                             if (existing != null && !existing.equals(name))
                             {
                                 continue;

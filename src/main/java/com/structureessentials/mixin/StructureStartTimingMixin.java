@@ -1,8 +1,9 @@
 package com.structureessentials.mixin;
 
+import com.cupboard.util.RegistryLookup;
+import com.cupboard.util.ResourceLocation;
 import com.structureessentials.Timings;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
@@ -57,7 +58,7 @@ public abstract class StructureStartTimingMixin
 
         if (id == null)
         {
-            id = worldGenLevel.registryAccess().registry(Registries.STRUCTURE).get().getKey(this.getStructure());
+            id = RegistryLookup.getID(worldGenLevel, Registries.STRUCTURE, this.getStructure());
         }
 
         if (id != null)

@@ -1,5 +1,7 @@
 package com.structureessentials;
 
+import com.cupboard.util.RegistryLookup;
+import com.cupboard.util.ResourceLocation;
 import com.structureessentials.command.Command;
 import com.structureessentials.config.CommonConfiguration;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -9,14 +11,13 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBiomeTags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBiomeTags;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BiomeTags;
@@ -63,10 +64,10 @@ public class StructureEssentials implements ModInitializer
         Timings.structureTimings = new ConcurrentHashMap<>();
 
         final RegistryAccess.Frozen registryAccess = server.registryAccess();
-        List<Holder.Reference<Structure>> holders = registryAccess.registryOrThrow(Registries.STRUCTURE).holders().toList();
-        final Registry<Biome> biomeRegistry = registryAccess.registry(Registries.BIOME).get();
+        List<Holder<Structure>> holders = RegistryLookup.getHolders(registryAccess, Registries.STRUCTURE);
+        final Registry<Biome> biomeRegistry = RegistryLookup.getRegistry(registryAccess, Registries.BIOME);
 
-        final Registry<StructureSet> structureSetRegistry = registryAccess.registryOrThrow(Registries.STRUCTURE_SET);
+        final Registry<StructureSet> structureSetRegistry = RegistryLookup.getRegistry(registryAccess, Registries.STRUCTURE_SET);
 
         if (CommonConfiguration.config.getCommonConfig().logDuplicatedSalt)
         {
@@ -75,7 +76,7 @@ public class StructureEssentials implements ModInitializer
             {
                 final int salt = entry.getValue().placement().salt();
                 structureSetIds.putIfAbsent(salt, new HashSet<>());
-                structureSetIds.get(salt).add(entry.getKey().location().toString());
+                structureSetIds.get(salt).add(entry.getKey().identifier().toString());
             }
 
             for (final Int2ObjectMap.Entry<Set<String>> entry : structureSetIds.int2ObjectEntrySet())
@@ -108,16 +109,16 @@ public class StructureEssentials implements ModInitializer
         directReplacementTags.put(ResourceLocation.withDefaultNamespace("savanna"), BiomeTags.IS_SAVANNA);
         directReplacementTags.put(ResourceLocation.withDefaultNamespace("deep_dark"), BiomeTags.HAS_ANCIENT_CITY);
 
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("plains"), ConventionalBiomeTags.PLAINS);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("snowy_plains"), ConventionalBiomeTags.SNOWY_PLAINS);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("desert"), ConventionalBiomeTags.DESERT);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("swamp"), ConventionalBiomeTags.SWAMP);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("flower_forest"), ConventionalBiomeTags.FLOWER_FORESTS);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("birch_forest"), ConventionalBiomeTags.BIRCH_FOREST);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("stony_shore"), ConventionalBiomeTags.STONY_SHORES);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("mushroom_fields"), ConventionalBiomeTags.MUSHROOM);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("warped_forest"), ConventionalBiomeTags.NETHER_FORESTS);
-        directReplacementTags.put(ResourceLocation.withDefaultNamespace("crimson_forest"), ConventionalBiomeTags.NETHER_FORESTS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("plains"), ConventionalBiomeTags.IS_PLAINS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("snowy_plains"), ConventionalBiomeTags.IS_SNOWY_PLAINS);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("desert"), ConventionalBiomeTags.IS_DESERT);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("swamp"), ConventionalBiomeTags.IS_SWAMP);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("flower_forest"), ConventionalBiomeTags.IS_FLOWER_FOREST);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("birch_forest"), ConventionalBiomeTags.IS_BIRCH_FOREST);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("stony_shore"), ConventionalBiomeTags.IS_STONY_SHORES);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("mushroom_fields"), ConventionalBiomeTags.IS_MUSHROOM);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("warped_forest"), ConventionalBiomeTags.IS_NETHER_FOREST);
+        directReplacementTags.put(ResourceLocation.withDefaultNamespace("crimson_forest"), ConventionalBiomeTags.IS_NETHER_FOREST);
 
         Set<TagKey<Biome>> DEFINING_TAGS =
             Set.of(BiomeTags.IS_RIVER,
@@ -158,7 +159,7 @@ public class StructureEssentials implements ModInitializer
                 createBiomeTag("c", "is_aquatic")
             );
 
-        for (final Holder.Reference<Structure> holder : holders)
+        for (final Holder<Structure> holder : holders)
         {
             LinkedHashSet<Holder<Biome>> biomeHolderSet = new LinkedHashSet<>(holder.value().biomes().size());
             float minTemp = 1000;
@@ -259,7 +260,7 @@ public class StructureEssentials implements ModInitializer
                     }
                 }
 
-                if (!contained || !CommonConfiguration.config.getCommonConfig().dimensionWhitelist.contains(dimensionBiomes.getKey().dimension().location().toString()))
+                if (!contained || !CommonConfiguration.config.getCommonConfig().dimensionWhitelist.contains(dimensionBiomes.getKey().dimension().identifier().toString()))
                 {
                     iterator.remove();
                 }
@@ -271,7 +272,7 @@ public class StructureEssentials implements ModInitializer
 
             for (final TagKey<Biome> biomeTag : requiredDefiningSet)
             {
-                for (final Holder<Biome> tagBiome : biomeRegistry.getOrCreateTag(biomeTag))
+                for (final Holder<Biome> tagBiome : RegistryLookup.getHolders(registryAccess, Registries.BIOME, biomeTag))
                 {
                     if (!biomeHolderSet.contains(tagBiome))
                     {
@@ -286,7 +287,7 @@ public class StructureEssentials implements ModInitializer
                 // Check tag and if applicable add all its values
                 if (tag != null && !addedTags.contains(tag) && biome.is(tag))
                 {
-                    for (final Holder<Biome> tagBiome : biomeRegistry.getOrCreateTag(tag))
+                    for (final Holder<Biome> tagBiome : RegistryLookup.getHolders(registryAccess, Registries.BIOME, tag))
                     {
                         if (biomeHolderSet.contains(tagBiome))
                         {
@@ -452,9 +453,10 @@ public class StructureEssentials implements ModInitializer
                 if (CommonConfiguration.config.getCommonConfig().autoBiomeCompatLogging)
                 {
                     StructureEssentials.LOGGER.warn(
-                        "Adding Biomes to structure: " + holder.key().location() + " tag:" + tagName + " mins:" + ((int) (minSimilarity * 1000)) / 1000.0 + " biomes: "
+                        "Adding Biomes to structure: " + holder.unwrapKey().get().identifier() + " tag:" + tagName + " mins:" + ((int) (minSimilarity * 1000)) / 1000.0
+                            + " biomes: "
                             + toAdd.stream()
-                            .map(e -> e.unwrapKey().get().location() + ":" + ((int) (potentialBiomes.getOrDefault(e, 0) * 1000)) / 1000.0)
+                            .map(e -> e.unwrapKey().get().identifier() + ":" + ((int) (potentialBiomes.getOrDefault(e, 0) * 1000)) / 1000.0)
                             .toList());
                 }
 

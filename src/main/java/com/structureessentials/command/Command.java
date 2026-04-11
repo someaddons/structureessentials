@@ -1,5 +1,7 @@
 package com.structureessentials.command;
 
+import com.cupboard.util.RegistryLookup;
+import com.cupboard.util.ResourceLocation;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.structureessentials.StructureEssentials;
 import com.structureessentials.Timings;
@@ -21,15 +23,14 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.Music;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.MobSpawnSettings;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
@@ -51,9 +52,9 @@ public class Command
                             final ResourceKey<Biome>
                                 biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
                             List<TagKey<Biome>> biomeTags =
-                                context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get().tags().collect(Collectors.toList());
+                                RegistryLookup.getHolder(context.getSource().registryAccess(), Registries.BIOME, biome).tags().toList();
 
-                            context.getSource().sendSystemMessage(Component.literal("Biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
+                            context.getSource().sendSystemMessage(Component.literal("Biome tags for: " + biome.identifier()).withStyle(ChatFormatting.GOLD));
                             for (final TagKey<Biome> biomeTag : biomeTags)
                             {
                                 context.getSource().sendSystemMessage(Component.literal("#" + biomeTag.location()));
@@ -66,11 +67,11 @@ public class Command
                     .executes(context ->
                     {
                         int count = 0;
-                        List<Map.Entry<ResourceLocation, Long>> sortedFeatures = new ArrayList<>(Timings.featureTimings.entrySet());
+                        List<Map.Entry<Identifier, Long>> sortedFeatures = new ArrayList<>(Timings.featureTimings.entrySet());
                         sortedFeatures.sort(Comparator.comparingLong(e -> ((Map.Entry<ResourceLocation, Long>) (e)).getValue()).reversed());
                         context.getSource().sendSystemMessage(Component.literal("Features timings:").withStyle(ChatFormatting.GOLD));
                         StructureEssentials.LOGGER.warn("Placed Feature timings in ms:");
-                        for (final Map.Entry<ResourceLocation, Long> entry : sortedFeatures)
+                        for (final Map.Entry<Identifier, Long> entry : sortedFeatures)
                         {
                             count++;
 
@@ -85,11 +86,11 @@ public class Command
                         }
 
                         count = 0;
-                        List<Map.Entry<ResourceLocation, Long>> sortedStructures = new ArrayList<>(Timings.structureTimings.entrySet());
+                        List<Map.Entry<Identifier, Long>> sortedStructures = new ArrayList<>(Timings.structureTimings.entrySet());
                         sortedStructures.sort(Comparator.comparingLong(e -> ((Map.Entry<ResourceLocation, Long>) (e)).getValue()).reversed());
                         context.getSource().sendSystemMessage(Component.literal("Structure timings:").withStyle(ChatFormatting.GOLD));
                         StructureEssentials.LOGGER.warn("Structure timings in ms:");
-                        for (final Map.Entry<ResourceLocation, Long> entry : sortedStructures)
+                        for (final Map.Entry<Identifier, Long> entry : sortedStructures)
                         {
                             count++;
 
@@ -113,11 +114,11 @@ public class Command
                             final TagKey<Biome> biomeTag = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().right().get().key();
 
                             context.getSource().sendSystemMessage(Component.literal("Biomes for tag: " + biomeTag.location()).withStyle(ChatFormatting.GOLD));
-                            for (final Holder<Biome> biomeHolder : context.getSource().registryAccess().registry(Registries.BIOME).get().asHolderIdMap())
+                            for (final Holder<Biome> biomeHolder : context.getSource().registryAccess().lookupOrThrow(Registries.BIOME).asHolderIdMap())
                             {
                                 if (biomeHolder.is(biomeTag))
                                 {
-                                    context.getSource().sendSystemMessage(Component.literal("Biome: " + biomeHolder.unwrapKey().get().location()));
+                                    context.getSource().sendSystemMessage(Component.literal("Biome: " + biomeHolder.unwrapKey().get().identifier()));
                                 }
                             }
 
@@ -125,19 +126,19 @@ public class Command
                         })))
             .then(
                 Commands.literal("getStructuresNearby")
-                    .requires(stack -> stack.hasPermission(2))
+                    .requires(stack -> stack.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
                     .executes(context ->
                     {
                         final ServerLevel world = context.getSource().getLevel();
                         final Map<Structure, LongSet> structures = new HashMap<>();
 
-                        final ChunkPos start = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
+                        final ChunkPos start = ChunkPos.containing(BlockPos.containing(context.getSource().getPosition()));
                         for (int x = -5; x < 5; x++)
                         {
                             for (int z = -5; z < 5; z++)
                             {
                                 for (final Map.Entry<Structure, LongSet> entry : world.structureManager()
-                                    .getAllStructuresAt(new BlockPos((start.x + x) << 4, 0, (start.z + z) << 4))
+                                    .getAllStructuresAt(new BlockPos((start.x() + x) << 4, 0, (start.z() + z) << 4))
                                     .entrySet())
                                 {
                                     structures.computeIfAbsent(entry.getKey(), k -> new LongOpenHashSet(entry.getValue())).addAll(entry.getValue());
@@ -152,8 +153,8 @@ public class Command
                             world.structureManager().fillStartsForStructure(structureEntry.getKey(), structureEntry.getValue(),
                                 structureStart ->
                                 {
-                                    structurePositions.put(structureStart.getBoundingBox().getCenter(), context.getSource().registryAccess().registry(Registries.STRUCTURE).get()
-                                        .getKey(structureEntry.getKey()).toString());
+                                    structurePositions.put(structureStart.getBoundingBox().getCenter(),
+                                        RegistryLookup.getID(context.getSource().registryAccess(), Registries.STRUCTURE, structureEntry.getKey()).toString());
                                 }
                             );
                         }
@@ -167,7 +168,7 @@ public class Command
                                 .sendSystemMessage(Component.literal(structureEntry.getValue())
                                     .append(Component.literal(" " + structureEntry.getKey()).withStyle(ChatFormatting.YELLOW).withStyle(style ->
                                         {
-                                            return style.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                                            return style.withClickEvent(new ClickEvent.RunCommand(
                                                 "/tp " + structureEntry.getKey().getX() + " " + structureEntry.getKey().getY() + " " + structureEntry.getKey().getZ()));
                                         }
                                     )));
@@ -184,18 +185,18 @@ public class Command
                             final ResourceKey<Biome>
                                 biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
 
-                            final Holder<Biome> holder = context.getSource().registryAccess().registry(Registries.BIOME).get().getHolder(biome).get();
+                            final Holder<Biome> holder = RegistryLookup.getHolder(context.getSource().registryAccess(), Registries.BIOME, biome.identifier());
 
                             var sortedBiomeHolders = getSimilarBiomesFor(holder, context.getSource().registryAccess());
                             var sortedBiomeTagKeys = getSimilarTagsFor(holder, context.getSource().registryAccess());
 
-                            context.getSource().sendSystemMessage(Component.literal("Similar biome tags for: " + biome.location()).withStyle(ChatFormatting.GOLD));
+                            context.getSource().sendSystemMessage(Component.literal("Similar biome tags for: " + biome.identifier()).withStyle(ChatFormatting.GOLD));
 
                             for (int i = 0; i < sortedBiomeHolders.size() && i < 7; i++)
                             {
                                 context.getSource()
                                     .sendSystemMessage(Component.literal(
-                                        "Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location()));
+                                        "Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().identifier()));
                             }
 
                             int count = 0;
@@ -212,7 +213,7 @@ public class Command
                             for (int i = 0; i < sortedBiomeHolders.size(); i++)
                             {
                                 StructureEssentials.LOGGER.info(
-                                    "Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().location());
+                                    "Weight:" + sortedBiomeHolders.get(i).getValue() + " Biome: " + sortedBiomeHolders.get(i).getKey().unwrap().left().get().identifier());
                             }
 
                             for (final Map.Entry<TagKey<Biome>, Double> tag : sortedBiomeTagKeys)
@@ -237,7 +238,7 @@ public class Command
         final Set<Holder<Biome>> similarBiomes = new HashSet<>();
         final Set<TagKey<Biome>> biomeTags = biomeHolder.tags().collect(Collectors.toSet());
 
-        for (final Holder<Biome> currentBiome : registryAccess.registry(Registries.BIOME).get().asHolderIdMap())
+        for (final Holder<Biome> currentBiome : registryAccess.lookupOrThrow(Registries.BIOME).asHolderIdMap())
         {
             for (final TagKey<Biome> tag : biomeTags)
             {
@@ -276,9 +277,7 @@ public class Command
         final float downfall = biomeHolder.value().hasPrecipitation() ? biomeHolder.value().climateSettings.downfall() : 0.0f;
         final Biome.Precipitation orgPrecipitation =
             !biomeHolder.value().hasPrecipitation() ? Biome.Precipitation.NONE : orgTemperature >= 0.15F ? Biome.Precipitation.RAIN : Biome.Precipitation.SNOW;
-        final String orgName = biomeHolder.unwrapKey().get().location().getPath().toString();
-        final Optional<Music> orgMusic = biomeHolder.value().getSpecialEffects().getBackgroundMusic();
-        final int orgSkyColor = biomeHolder.value().getSpecialEffects().getSkyColor();
+        final String orgName = biomeHolder.unwrapKey().get().identifier().getPath().toString();
         final Set<Holder<PlacedFeature>> orgFeatures = new HashSet<>();
         for (final HolderSet<PlacedFeature> featureSet : biomeHolder.value().getGenerationSettings().features())
         {
@@ -287,8 +286,6 @@ public class Command
                 orgFeatures.add(feature);
             }
         }
-
-        final List<ConfiguredFeature<?, ?>> orgFlowerFeatures = biomeHolder.value().getGenerationSettings().getFlowerFeatures();
         final MobSpawnSettings orgMobSettings = biomeHolder.value().getMobSettings();
 
         for (ObjectIterator<Object2DoubleMap.Entry<Holder<Biome>>> iterator = countMap.object2DoubleEntrySet().iterator(); iterator.hasNext(); )
@@ -325,28 +322,6 @@ public class Command
                 modifier *= 1.2;
             }
 
-            if (orgMusic.isPresent())
-            {
-                if (ratedBiomeHolder.value().getSpecialEffects().getBackgroundMusic().isPresent() && ratedBiomeHolder.value()
-                    .getSpecialEffects()
-                    .getBackgroundMusic()
-                    .get()
-                    .getEvent()
-                    .equals(orgMusic.get().getEvent()))
-                {
-                    modifier *= 1.2;
-                }
-                else
-                {
-                    modifier *= 0.9;
-                }
-            }
-
-            if (ratedBiomeHolder.value().getSpecialEffects().getSkyColor() != orgSkyColor)
-            {
-                modifier *= 0.9;
-            }
-
             int matchingFeatures = 0;
             int totalFeatures = 0;
             for (final HolderSet<PlacedFeature> featureSet : ratedBiomeHolder.value().getGenerationSettings().features())
@@ -365,29 +340,6 @@ public class Command
             int additionalFeatures = totalFeatures - missingFeatures;
             modifier *= (1.0 - Math.min(0.1, (0.1 * ((double) (missingFeatures * 3) / Math.max(1, orgFeatures.size())))));
             modifier *= (1.0 - (0.05 * ((double) additionalFeatures / Math.max(10, orgFeatures.size()))));
-
-            if (!orgFlowerFeatures.isEmpty())
-            {
-                int missingFlowerFeatures = 0;
-                for (final ConfiguredFeature<?, ?> feature : orgFlowerFeatures)
-                {
-                    boolean foundFlowerFeature = false;
-                    for (final var existing : ratedBiomeHolder.value().getGenerationSettings().getFlowerFeatures())
-                    {
-                        if (existing.equals(feature))
-                        {
-                            foundFlowerFeature = true;
-                            break;
-                        }
-                    }
-
-                    if (!foundFlowerFeature)
-                    {
-                        missingFlowerFeatures++;
-                    }
-                }
-                modifier *= (1.0 - (0.1 * ((double) missingFlowerFeatures / orgFlowerFeatures.size())));
-            }
 
             if (!orgMobSettings.mobSpawnCosts.keySet().isEmpty())
             {
@@ -420,7 +372,7 @@ public class Command
     private static class CustomEntry implements Object2IntMap.Entry<Holder<Biome>>
     {
         final Holder<Biome> holder;
-        final int           value;
+        final int value;
 
         private CustomEntry(final Holder<Biome> holder, final int value)
         {
@@ -446,6 +398,7 @@ public class Command
             return holder;
         }
     }
+
 
     public static List<Map.Entry<TagKey<Biome>, Double>> getSimilarTagsFor(final Holder<Biome> biomeHolder, final RegistryAccess registryAccess)
     {
@@ -487,7 +440,7 @@ public class Command
         final float temp = biome.getBaseTemperature();
         if (temp == 0.5f || temp == 0.8f)
         {
-            final String biomeString = holder.unwrapKey().get().location().toString();
+            final String biomeString = holder.unwrapKey().get().identifier().toString();
             if (biomeString.contains("hot") || biomeString.contains("warm") || biomeString.contains("desert"))
             {
                 return 0.95f;

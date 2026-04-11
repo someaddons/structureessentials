@@ -83,7 +83,7 @@ public class StructureSearchTimeoutMixin
         {
             if (holder.unwrapKey().isPresent())
             {
-                return holder.unwrapKey().get().location().toString();
+                return holder.unwrapKey().get().identifier().toString();
             }
         }
 
