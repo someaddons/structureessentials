@@ -31,12 +31,12 @@ public class StructureSearchSpeedupMixin
 {
     @Inject(method = "getStructureGeneratingAt", at = @At("HEAD"), cancellable = true)
     private static void onFind(
-      final Set<Holder<Structure>> holderSet,
-      final LevelReader level,
-      final StructureManager structureManager,
-      final boolean load,
-      final StructurePlacement placement,
-      final ChunkPos pos, final CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
+        final Set<Holder<Structure>> holderSet,
+        final LevelReader level,
+        final StructureManager structureManager,
+        final boolean load,
+        final StructurePlacement placement,
+        final ChunkPos pos, final CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
     {
         if (holderSet.isEmpty() || !CommonConfiguration.config.getCommonConfig().useFastStructureLookup)
         {
@@ -45,7 +45,33 @@ public class StructureSearchSpeedupMixin
 
         boolean found = false;
 
-        int[] yLevels = Mth.outFromOrigin(65, level.getMinY() + 1, level.getMaxY(), 64).toArray();
+        final int min = level.getMinY();
+        final int max = level.getMaxY();
+        int startY = 65;
+        if (startY > max || startY < min)
+        {
+            startY = (min + max) / 2;
+        }
+
+        final int stepSize = 64;
+        final int upSteps = (max - startY) / stepSize;
+        final int downSteps = (startY - min) / stepSize;
+        final int[] yLevels = new int[1 + upSteps + downSteps];
+
+        yLevels[0] = startY;
+        int index = 1;
+        for (int step = 1; step <= Math.max(upSteps, downSteps); step++)
+        {
+            if (step <= upSteps)
+            {
+                yLevels[index++] = startY + step * stepSize;
+            }
+
+            if (step <= downSteps)
+            {
+                yLevels[index++] = startY - step * stepSize;
+            }
+        }
 
         final BlockPos worldPos = pos.getWorldPosition();
 
