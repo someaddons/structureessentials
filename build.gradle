@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+    }
+}
+
 plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'maven-publish'
@@ -38,7 +47,7 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    implementation("curse.maven:cupboard-326652:7906258")
+    implementation("curse.maven:cupboard-326652:8275393")
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
@@ -92,3 +101,34 @@ publishing {
         // retrieving dependencies.
     }
 }
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.core.JsonProcessingException
+
+tasks.register("validateJson") {
+    def jsonFiles = layout.projectDirectory.asFileTree.matching {
+        include "src/main/resources/**/*.json"
+    }
+
+    doLast {
+        def mapper = new ObjectMapper()
+        def failed = false
+
+        jsonFiles.each { file ->
+            try {
+                mapper.readTree(file)
+            } catch (JsonProcessingException e) {
+                def loc = e.location
+                logger.error("${file.absolutePath}:${loc.lineNr}")
+                logger.error("JSON error: ${e.originalMessage}")
+                failed = true
+            }
+        }
+
+        if (failed) {
+            throw new GradleException("Invalid JSON files detected")
+        }
+    }
+}
+
+processResources.dependsOn validateJson
