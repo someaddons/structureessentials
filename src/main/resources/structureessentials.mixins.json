@@ -1,8 +1,6 @@
 {
   "required": false,
   "package": "com.structureessentials.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "refmap": "structureessentials.refmap.json",
   "plugin": "com.structureessentials.mixin.MixinConfig",
   "mixins": [
     "BlockInfoMixin",
