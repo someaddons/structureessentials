@@ -26,6 +26,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
+import net.minecraft.world.level.levelgen.structure.placement.AbstractSpreadingStructurePlacement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,9 +75,12 @@ public class StructureEssentials implements ModInitializer
             Int2ObjectOpenHashMap<Set<String>> structureSetIds = new Int2ObjectOpenHashMap();
             for (final Map.Entry<ResourceKey<StructureSet>, StructureSet> entry : structureSetRegistry.entrySet())
             {
-                final int salt = entry.getValue().placement().salt();
-                structureSetIds.putIfAbsent(salt, new HashSet<>());
-                structureSetIds.get(salt).add(entry.getKey().identifier().toString());
+                if (entry.getValue().placement() instanceof AbstractSpreadingStructurePlacement aPLacement)
+                {
+                    final int salt = aPLacement.salt;
+                    structureSetIds.putIfAbsent(salt, new HashSet<>());
+                    structureSetIds.get(salt).add(entry.getKey().identifier().toString());
+                }
             }
 
             for (final Int2ObjectMap.Entry<Set<String>> entry : structureSetIds.int2ObjectEntrySet())

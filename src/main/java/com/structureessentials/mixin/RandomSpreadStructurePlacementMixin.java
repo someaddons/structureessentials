@@ -3,6 +3,7 @@ package com.structureessentials.mixin;
 import com.structureessentials.config.CommonConfiguration;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.levelgen.structure.placement.AbstractSpreadingStructurePlacement;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadType;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
@@ -29,18 +30,18 @@ public class RandomSpreadStructurePlacementMixin
     @Mutable
     private int separation;
 
-    @Inject(method = "<init>(Lnet/minecraft/core/Vec3i;Lnet/minecraft/world/level/levelgen/structure/placement/StructurePlacement$FrequencyReductionMethod;FILjava/util/Optional;IILnet/minecraft/world/level/levelgen/structure/placement/RandomSpreadType;)V"
+    @Inject(method = "<init>(Lnet/minecraft/core/Vec3i;Lnet/minecraft/world/level/levelgen/structure/placement/AbstractSpreadingStructurePlacement$FrequencyReductionMethod;FILjava/util/Optional;IILnet/minecraft/world/level/levelgen/structure/placement/RandomSpreadType;)V"
       , at = @At("RETURN"))
     private void adjustSpacingSeperation(
-      final Vec3i p_227000_,
-      final StructurePlacement.FrequencyReductionMethod p_227001_,
-      final float p_227002_,
-      final int p_227003_,
-      final Optional p_227004_,
-      final int p_227005_,
-      final int p_227006_,
-      final RandomSpreadType p_227007_,
-      final CallbackInfo ci)
+        final Vec3i locateOffset,
+        final AbstractSpreadingStructurePlacement.FrequencyReductionMethod frequencyReductionMethod,
+        final float frequency,
+        final int salt,
+        final Optional exclusionZone,
+        final int a,
+        final int b,
+        final RandomSpreadType spreadType,
+        final CallbackInfo ci)
     {
         spacing = Mth.clamp((int) Math.round(spacing * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 1, 4095);
         separation = Mth.clamp((int) Math.round(separation * CommonConfiguration.config.getCommonConfig().spacingSeparationModifier), 0, 4095);

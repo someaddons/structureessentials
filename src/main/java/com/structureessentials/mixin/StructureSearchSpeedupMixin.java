@@ -15,6 +15,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
@@ -74,6 +75,8 @@ public class StructureSearchSpeedupMixin
 
         final BlockPos worldPos = pos.getWorldPosition();
 
+        BiomeResolver resolver = ((ServerLevel) level).getChunkSource().getGenerator().getBiomeSource().createCachingResolver(((ServerLevel) level).getChunkSource().randomState());
+
         outer:
         for (int i = 0; i < 4; i++)
         {
@@ -83,10 +86,7 @@ public class StructureSearchSpeedupMixin
             for (int yBlock : yLevels)
             {
                 final int yQuart = QuartPos.fromBlock(yBlock);
-                final Holder<Biome> holder = ((ServerLevel) level).getChunkSource()
-                  .getGenerator()
-                  .getBiomeSource()
-                  .getNoiseBiome(xQuart, yQuart, zQuart, ((ServerLevel) level).getChunkSource().randomState().sampler());
+                final Holder<Biome> holder = resolver.getNoiseBiome(xQuart, yQuart, zQuart);
 
                 for (final Holder<Structure> structureHolder : holderSet)
                 {

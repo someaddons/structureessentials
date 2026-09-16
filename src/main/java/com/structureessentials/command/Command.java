@@ -28,6 +28,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.MobSpawnSettings;
@@ -52,7 +53,7 @@ public class Command
                             final ResourceKey<Biome>
                                 biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
                             List<TagKey<Biome>> biomeTags =
-                                RegistryLookup.getHolder(context.getSource().registryAccess(), Registries.BIOME, biome).tags().toList();
+                                RegistryLookup.getHolder(context.getSource().registryAccess(),Registries.BIOME,biome).tags().toList();
 
                             context.getSource().sendSystemMessage(Component.literal("Biome tags for: " + biome.identifier()).withStyle(ChatFormatting.GOLD));
                             for (final TagKey<Biome> biomeTag : biomeTags)
@@ -153,8 +154,7 @@ public class Command
                             world.structureManager().fillStartsForStructure(structureEntry.getKey(), structureEntry.getValue(),
                                 structureStart ->
                                 {
-                                    structurePositions.put(structureStart.getBoundingBox().getCenter(),
-                                        RegistryLookup.getID(context.getSource().registryAccess(), Registries.STRUCTURE, structureEntry.getKey()).toString());
+                                    structurePositions.put(structureStart.getBoundingBox().getCenter(),RegistryLookup.getID(context.getSource().registryAccess(),Registries.STRUCTURE, structureEntry.getKey()).toString());
                                 }
                             );
                         }
@@ -185,7 +185,7 @@ public class Command
                             final ResourceKey<Biome>
                                 biome = ResourceOrTagArgument.getResourceOrTag(context, "biome", Registries.BIOME).unwrap().left().get().key();
 
-                            final Holder<Biome> holder = RegistryLookup.getHolder(context.getSource().registryAccess(), Registries.BIOME, biome.identifier());
+                            final Holder<Biome> holder = RegistryLookup.getHolder(context.getSource().registryAccess(),Registries.BIOME,biome.identifier());
 
                             var sortedBiomeHolders = getSimilarBiomesFor(holder, context.getSource().registryAccess());
                             var sortedBiomeTagKeys = getSimilarTagsFor(holder, context.getSource().registryAccess());
@@ -286,7 +286,7 @@ public class Command
                 orgFeatures.add(feature);
             }
         }
-        final MobSpawnSettings orgMobSettings = biomeHolder.value().getMobSettings();
+        final MobSpawnSettings orgMobSettings = (MobSpawnSettings) biomeHolder.value().getAttributes().get(EnvironmentAttributes.NATURAL_MOB_SPAWNS).argument();
 
         for (ObjectIterator<Object2DoubleMap.Entry<Holder<Biome>>> iterator = countMap.object2DoubleEntrySet().iterator(); iterator.hasNext(); )
         {
@@ -341,23 +341,19 @@ public class Command
             modifier *= (1.0 - Math.min(0.1, (0.1 * ((double) (missingFeatures * 3) / Math.max(1, orgFeatures.size())))));
             modifier *= (1.0 - (0.05 * ((double) additionalFeatures / Math.max(10, orgFeatures.size()))));
 
-            if (!orgMobSettings.mobSpawnCosts.keySet().isEmpty())
+            if (!orgMobSettings.allSpawnCosts().isEmpty())
             {
                 int missingMobs = 0;
-                for (final var type : orgMobSettings.mobSpawnCosts.keySet())
+                for (final var type : orgMobSettings.allSpawnCosts().keySet())
                 {
-                    if (!ratedBiomeHolder.value().getMobSettings().mobSpawnCosts.keySet().contains(type))
+                    MobSpawnSettings ratedSettings = (MobSpawnSettings) ratedBiomeHolder.value().getAttributes().get(EnvironmentAttributes.NATURAL_MOB_SPAWNS).argument();
+                    if (!ratedSettings.allSpawnCosts().keySet().contains(type))
                     {
                         missingMobs++;
                     }
                 }
 
-                modifier *= (1.0 - (0.2 * ((double) missingMobs / orgMobSettings.mobSpawnCosts.keySet().size())));
-            }
-
-            if (Math.abs(orgMobSettings.getCreatureProbability() - ratedBiomeHolder.value().getMobSettings().getCreatureProbability()) > 0.1)
-            {
-                modifier *= 0.9;
+                modifier *= (1.0 - (0.2 * ((double) missingMobs / orgMobSettings.allSpawnCosts().size())));
             }
 
             ratedHolderEntry.setValue((ratedHolderEntry.getDoubleValue() * modifier));
@@ -374,8 +370,7 @@ public class Command
         final Holder<Biome> holder;
         final int value;
 
-        private CustomEntry(final Holder<Biome> holder, final int value)
-        {
+        private CustomEntry(final Holder<Biome> holder, final int value) {
             this.holder = holder;
             this.value = value;
         }
