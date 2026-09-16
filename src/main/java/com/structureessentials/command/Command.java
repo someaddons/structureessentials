@@ -28,6 +28,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.MobSpawnSettings;
@@ -285,7 +286,7 @@ public class Command
                 orgFeatures.add(feature);
             }
         }
-        final MobSpawnSettings orgMobSettings = biomeHolder.value().getMobSettings();
+        final MobSpawnSettings orgMobSettings = (MobSpawnSettings) biomeHolder.value().getAttributes().get(EnvironmentAttributes.NATURAL_MOB_SPAWNS).argument();
 
         for (ObjectIterator<Object2DoubleMap.Entry<Holder<Biome>>> iterator = countMap.object2DoubleEntrySet().iterator(); iterator.hasNext(); )
         {
@@ -340,23 +341,19 @@ public class Command
             modifier *= (1.0 - Math.min(0.1, (0.1 * ((double) (missingFeatures * 3) / Math.max(1, orgFeatures.size())))));
             modifier *= (1.0 - (0.05 * ((double) additionalFeatures / Math.max(10, orgFeatures.size()))));
 
-            if (!orgMobSettings.getEntityTypes().isEmpty())
+            if (!orgMobSettings.allSpawnCosts().isEmpty())
             {
                 int missingMobs = 0;
-                for (final var type : orgMobSettings.getEntityTypes())
+                for (final var type : orgMobSettings.allSpawnCosts().keySet())
                 {
-                    if (!ratedBiomeHolder.value().getMobSettings().getEntityTypes().contains(type))
+                    MobSpawnSettings ratedSettings = (MobSpawnSettings) ratedBiomeHolder.value().getAttributes().get(EnvironmentAttributes.NATURAL_MOB_SPAWNS).argument();
+                    if (!ratedSettings.allSpawnCosts().keySet().contains(type))
                     {
                         missingMobs++;
                     }
                 }
 
-                modifier *= (1.0 - (0.2 * ((double) missingMobs / orgMobSettings.getEntityTypes().size())));
-            }
-
-            if (Math.abs(orgMobSettings.getCreatureProbability() - ratedBiomeHolder.value().getMobSettings().getCreatureProbability()) > 0.1)
-            {
-                modifier *= 0.9;
+                modifier *= (1.0 - (0.2 * ((double) missingMobs / orgMobSettings.allSpawnCosts().size())));
             }
 
             ratedHolderEntry.setValue((ratedHolderEntry.getDoubleValue() * modifier));

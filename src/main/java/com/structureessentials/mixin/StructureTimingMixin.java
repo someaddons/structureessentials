@@ -12,6 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -41,6 +42,7 @@ public class StructureTimingMixin
         final RegistryAccess registryAccess,
         final ChunkGenerator chunkGenerator,
         final BiomeSource biomeSource,
+        final Climate.Sampler climateSampler,
         final RandomState randomState,
         final StructureTemplateManager structureTemplateManager,
         final long seed,
@@ -60,6 +62,7 @@ public class StructureTimingMixin
         final RegistryAccess registryAccess,
         final ChunkGenerator chunkGenerator,
         final BiomeSource biomeSource,
+        final Climate.Sampler climateSampler,
         final RandomState randomState,
         final StructureTemplateManager structureTemplateManager,
         final long seed,

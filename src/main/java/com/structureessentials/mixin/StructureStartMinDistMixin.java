@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.RandomState;
@@ -46,6 +47,7 @@ public abstract class StructureStartMinDistMixin
             final RegistryAccess registryAccess,
             final ChunkGenerator chunkGenerator,
             final BiomeSource biomeSource,
+            final Climate.Sampler climateSampler,
             final RandomState randomState,
             final StructureTemplateManager structureTemplateManager,
             final long seed,
