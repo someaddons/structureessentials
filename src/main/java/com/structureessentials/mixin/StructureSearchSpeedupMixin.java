@@ -44,6 +44,12 @@ public class StructureSearchSpeedupMixin
             return;
         }
 
+        if (!placement.applyAdditionalChunkRestrictions(pos.x(), pos.z(), ((ServerLevel) level).getSeed()))
+        {
+            cir.setReturnValue(null);
+            return;
+        }
+
         boolean found = false;
 
         final int min = level.getMinY();
