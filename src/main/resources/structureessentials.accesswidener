@@ -5,3 +5,5 @@ accessible method net/minecraft/world/level/biome/Biome$ClimateSettings downfall
 accessible field net/minecraft/world/level/levelgen/structure/Structure settings Lnet/minecraft/world/level/levelgen/structure/Structure$StructureSettings;
 accessible method net/minecraft/world/level/levelgen/structure/placement/StructurePlacement salt ()I
 accessible field net/minecraft/world/level/biome/MobSpawnSettings mobSpawnCosts Ljava/util/Map;
+accessible field net/minecraft/world/level/levelgen/structure/placement/StructurePlacement frequency F
+accessible field net/minecraft/world/level/levelgen/structure/placement/StructurePlacement frequencyReductionMethod Lnet/minecraft/world/level/levelgen/structure/placement/StructurePlacement$FrequencyReductionMethod;
