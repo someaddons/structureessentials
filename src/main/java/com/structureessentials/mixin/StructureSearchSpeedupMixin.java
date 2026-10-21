@@ -35,10 +35,21 @@ public class StructureSearchSpeedupMixin
         final StructureManager structureManager,
         final boolean load,
         final StructurePlacement placement,
-        final ChunkPos pos, final CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
+        final ChunkPos pos,
+        final CallbackInfoReturnable<Pair<BlockPos, Holder<Structure>>> cir)
     {
         if (holderSet.isEmpty() || !CommonConfiguration.config.getCommonConfig().useFastStructureLookup)
         {
+            return;
+        }
+
+        if (level instanceof ServerLevel serverLevel && placement.frequency < 1.0F && !placement.frequencyReductionMethod.shouldGenerate(serverLevel.getSeed(),
+            placement.salt(),
+            pos.x,
+            pos.z,
+            placement.frequency))
+        {
+            cir.setReturnValue(null);
             return;
         }
 
@@ -84,9 +95,9 @@ public class StructureSearchSpeedupMixin
             {
                 final int yQuart = QuartPos.fromBlock(yBlock);
                 final Holder<Biome> holder = ((ServerLevel) level).getChunkSource()
-                  .getGenerator()
-                  .getBiomeSource()
-                  .getNoiseBiome(xQuart, yQuart, zQuart, ((ServerLevel) level).getChunkSource().randomState().sampler());
+                    .getGenerator()
+                    .getBiomeSource()
+                    .getNoiseBiome(xQuart, yQuart, zQuart, ((ServerLevel) level).getChunkSource().randomState().sampler());
 
                 for (final Holder<Structure> structureHolder : holderSet)
                 {
